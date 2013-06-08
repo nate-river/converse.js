@@ -125,8 +125,8 @@
 
         this.parseISO8601 = function (datestr) {
             /* Parses string formatted as 2013-02-14T11:27:08.268Z to a Date obj.
-            */
-            var numericKeys = [1, 4, 5, 6, 7, 10, 11],
+             */
+            var numericKeys = [1, 4, 5, 6, 7, 10, 11],
                 struct = /^\s*(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}\.?\d*)Z\s*$/.exec(datestr),
                 minutesOffset = 0,
                 i, k;
@@ -539,7 +539,7 @@
             template: _.template(
                 '<div class="chat-head chat-head-chatbox">' +
                     '<a class="close-chatbox-button">X</a>' +
-                    '<a href="{{url}}" target="_blank" class="user">' +
+                    '<a href="#" class="user">' +
                         '<div class="chat-title"> {{ fullname }} </div>' +
                     '</a>' +
                     '<p class="user-custom-message"><p/>' +
@@ -618,61 +618,62 @@
             id: 'users',
             events: {
                 'click a.toggle-xmpp-contact-form': 'toggleContactForm',
-                'submit form.add-xmpp-contact': 'addContactFromForm',
-                'submit form.search-xmpp-contact': 'searchContacts',
+                //'submit form.add-xmpp-contact': 'addContactFromForm',
+                //'submit form.search-xmpp-contact': 'searchContacts',
                 'click a.subscribe-to-user': 'addContactFromList'
             },
 
-            tab_template: _.template('<li><a class="s current" href="#users">'+__('Contacts')+'</a></li>'),
+            tab_template: _.template('<li><a class="s current" href="#users">'+__('聊天')+'</a></li>'),
             template: _.template(
                 '<form class="set-xmpp-status" action="" method="post">'+
                     '<span id="xmpp-status-holder">'+
                         '<select id="select-xmpp-status" style="display:none">'+
-                            '<option value="online">'+__('Online')+'</option>'+
-                            '<option value="dnd">'+__('Busy')+'</option>'+
-                            '<option value="away">'+__('Away')+'</option>'+
-                            '<option value="offline">'+__('Offline')+'</option>'+
+                            '<option value="online">'+__('在线')+'</option>'+
+                            // '<option value="dnd">'+__('Busy')+'</option>'+
+                            // '<option value="away">'+__('Away')+'</option>'+
+                            '<option value="offline">'+__('隐身')+'</option>'+
                         '</select>'+
                     '</span>'+
-                '</form>'+
-                '<dl class="add-converse-contact dropdown">' +
-                    '<dt id="xmpp-contact-search" class="fancy-dropdown">' +
-                        '<a class="toggle-xmpp-contact-form" href="#"'+
-                            'title="'+__('Click to add new chat contacts')+'">'+__('Add a contact')+'</a>' +
-                    '</dt>' +
-                    '<dd class="search-xmpp" style="display:none"><ul></ul></dd>' +
-                '</dl>'
+                '</form>'
+                // '<dl class="add-converse-contact dropdown">' +
+                //     '<dt id="xmpp-contact-search" class="fancy-dropdown">' +
+                //         '<a class="toggle-xmpp-contact-form" href="#"'+
+                //             'title="'+__('Click to add new chat contacts')+'">'+__('Add a contact')+'</a>' +
+                //     '</dt>' +
+                //     '<dd class="search-xmpp" style="display:none"><ul></ul></dd>' +
+                // '</dl>'
             ),
 
-            add_contact_template: _.template(
-                '<li>'+
-                    '<form class="add-xmpp-contact">' +
-                        '<input type="text" name="identifier" class="username" placeholder="'+__('Contact username')+'"/>' +
-                        '<button type="submit">'+__('Add')+'</button>' +
-                    '</form>'+
-                '<li>'
-            ),
+            // add_contact_template: _.template(
+            //     '<li>'+
+            //         '<form class="add-xmpp-contact">' +
+            //             '<input type="text" name="identifier" class="username" placeholder="'+__('Contact username')+'"/>' +
+            //             '<button type="submit">'+__('Add')+'</button>' +
+            //         '</form>'+
+            //     '<li>'
+            // ),
 
-            search_contact_template: _.template(
-                '<li>'+
-                    '<form class="search-xmpp-contact">' +
-                        '<input type="text" name="identifier" class="username" placeholder="'+__('Contact name')+'"/>' +
-                        '<button type="submit">'+__('Search')+'</button>' +
-                    '</form>'+
-                '<li>'
-            ),
+            // search_contact_template: _.template(
+            //     '<li>'+
+            //         '<form class="search-xmpp-contact">' +
+            //             '<input type="text" name="identifier" class="username" placeholder="'+__('Contact name')+'"/>' +
+            //             '<button type="submit">'+__('Search')+'</button>' +
+            //         '</form>'+
+            //     '<li>'
+            // ),
 
             render: function () {
                 var markup;
                 this.$parent.find('#controlbox-tabs').append(this.tab_template());
                 this.$parent.find('#controlbox-panes').append(this.$el.html(this.template()));
-                if (converse.xhr_user_search) {
-                    markup = this.search_contact_template();
-                } else {
-                    markup = this.add_contact_template();
-                }
+                // if (converse.xhr_user_search) {
+                //     markup = this.search_contact_template();
+                // } else {
+                //     markup = this.add_contact_template();
+                // }
                 this.$el.find('.search-xmpp ul').append(markup);
                 this.$el.append(converse.rosterview.$el);
+
                 return this;
             },
 
@@ -685,70 +686,70 @@
                 });
             },
 
-            searchContacts: function (ev) {
-                ev.preventDefault();
-                $.getJSON(portal_url + "/search-users?q=" + $(ev.target).find('input.username').val(), function (data) {
-                    var $ul= $('.search-xmpp ul');
-                    $ul.find('li.found-user').remove();
-                    $ul.find('li.chat-info').remove();
-                    if (!data.length) {
-                        $ul.append('<li class="chat-info">'+__('No users found')+'</li>');
-                    }
+            // searchContacts: function (ev) {
+            //     ev.preventDefault();
+            //     $.getJSON(portal_url + "/search-users?q=" + $(ev.target).find('input.username').val(), function (data) {
+            //         var $ul= $('.search-xmpp ul');
+            //         $ul.find('li.found-user').remove();
+            //         $ul.find('li.chat-info').remove();
+            //         if (!data.length) {
+            //             $ul.append('<li class="chat-info">'+__('No users found')+'</li>');
+            //         }
 
-                    $(data).each(function (idx, obj) {
-                        $ul.append(
-                            $('<li class="found-user"></li>')
-                            .append(
-                                $('<a class="subscribe-to-user" href="#" title="'+__('Click to add as a chat contact')+'"></a>')
-                                .attr('data-recipient', Strophe.escapeNode(obj.id)+'@'+converse.domain)
-                                .text(obj.fullname)
-                            )
-                        );
-                    });
-                });
-            },
+            //         $(data).each(function (idx, obj) {
+            //             $ul.append(
+            //                 $('<li class="found-user"></li>')
+            //                 .append(
+            //                     $('<a class="subscribe-to-user" href="#" title="'+__('Click to add as a chat contact')+'"></a>')
+            //                     .attr('data-recipient', Strophe.escapeNode(obj.id)+'@'+converse.domain)
+            //                     .text(obj.fullname)
+            //                 )
+            //             );
+            //         });
+            //     });
+            // },
 
-            addContactFromForm: function (ev) {
-                ev.preventDefault();
-                var $input = $(ev.target).find('input');
-                var jid = $input.val();
-                if (! jid) {
-                    // this is not a valid JID
-                    $input.addClass('error');
-                    return;
-                }
-                converse.getVCard(
-                    jid,
-                    $.proxy(function (jid, fullname, image, image_type, url) {
-                        this.addContact(jid, fullname);
-                    }, this),
-                    $.proxy(function (stanza) {
-                        console.log("An error occured while fetching vcard");
-                        if ($(stanza).find('error').attr('code') == '503') {
-                            // If we get service-unavailable, we continue to create
-                            // the user
-                            var jid = $(stanza).attr('from');
-                            this.addContact(jid, jid);
-                        }
-                    }, this));
-                $('.search-xmpp').hide();
-            },
+            // addContactFromForm: function (ev) {
+            //     ev.preventDefault();
+            //     var $input = $(ev.target).find('input');
+            //     var jid = $input.val();
+            //     if (! jid) {
+            //         // this is not a valid JID
+            //         $input.addClass('error');
+            //         return;
+            //     }
+            //     converse.getVCard(
+            //         jid,
+            //         $.proxy(function (jid, fullname, image, image_type, url) {
+            //             this.addContact(jid, fullname);
+            //         }, this),
+            //         $.proxy(function (stanza) {
+            //             console.log("An error occured while fetching vcard");
+            //             if ($(stanza).find('error').attr('code') == '503') {
+            //                 // If we get service-unavailable, we continue to create
+            //                 // the user
+            //                 var jid = $(stanza).attr('from');
+            //                 this.addContact(jid, jid);
+            //             }
+            //         }, this));
+            //     $('.search-xmpp').hide();
+            // },
 
-            addContactFromList: function (ev) {
-                ev.preventDefault();
-                var $target = $(ev.target),
-                    jid = $target.attr('data-recipient'),
-                    name = $target.text();
-                this.addContact(jid, name);
-                $target.parent().remove();
-                $('.search-xmpp').hide();
-            },
+            // addContactFromList: function (ev) {
+            //     ev.preventDefault();
+            //     var $target = $(ev.target),
+            //         jid = $target.attr('data-recipient'),
+            //         name = $target.text();
+            //     this.addContact(jid, name);
+            //     $target.parent().remove();
+            //     $('.search-xmpp').hide();
+            // },
 
-            addContact: function (jid, name) {
-                converse.connection.roster.add(jid, name, [], function (iq) {
-                    converse.connection.roster.subscribe(jid, null, converse.xmppstatus.get('fullname'));
-                });
-            }
+            // addContact: function (jid, name) {
+            //     converse.connection.roster.add(jid, name, [], function (iq) {
+            //         converse.connection.roster.subscribe(jid, null, converse.xmppstatus.get('fullname'));
+            //     });
+            // }
         });
 
         this.RoomsPanel = Backbone.View.extend({
@@ -810,15 +811,15 @@
                 '</div>'
             ),
 
-            tab_template: _.template('<li><a class="s" href="#chatrooms">'+__('Rooms')+'</a></li>'),
+            tab_template: _.template('<li><a class="s" href="#chatrooms">'+__('群聊')+'</a></li>'),
 
             template: _.template(
                 '<form class="add-chatroom" action="" method="post">'+
                     '<input type="text" name="chatroom" class="new-chatroom-name" placeholder="'+__('Room name')+'"/>'+
                     '<input type="text" name="nick" class="new-chatroom-nick" placeholder="'+__('Nickname')+'"/>'+
                     '<input type="{{ server_input_type }}" name="server" class="new-chatroom-server" placeholder="'+__('Server')+'"/>'+
-                    '<input type="submit" name="join" value="'+__('Join')+'"/>'+
-                    '<input type="button" name="show" id="show-rooms" value="'+__('Show rooms')+'"/>'+
+                    '<input type="submit" name="join" value="'+__('加入')+'"/>'+
+                    '<input type="button" name="show" id="show-rooms" value="'+__('显示房间')+'"/>'+
                 '</form>'+
                 '<dl id="available-chatrooms"></dl>'),
 
@@ -1063,38 +1064,66 @@
                 return;
             },
 
+            connect: function (jid, password) {
+                var button = null,
+                    connection = new Strophe.Connection(converse.bosh_service_url);
+
+                connection.connect(jid, password, $.proxy(function (status, message) {
+                    if (status === Strophe.Status.CONNECTED) {
+                        console.log(__('Connected'));
+                        converse.onConnected(connection);
+                    } else if (status === Strophe.Status.DISCONNECTED) {
+                        if ($button) { $button.show().siblings('img').remove(); }
+                        converse.giveFeedback(__('Disconnected'), 'error');
+                        this.connect(null, connection.jid, connection.pass);
+                    } else if (status === Strophe.Status.Error) {
+                        if ($button) { $button.show().siblings('img').remove(); }
+                        converse.giveFeedback(__('Error'), 'error');
+                    } else if (status === Strophe.Status.CONNECTING) {
+                        converse.giveFeedback(__('Connecting'));
+                    } else if (status === Strophe.Status.CONNFAIL) {
+                        if ($button) { $button.show().siblings('img').remove(); }
+                        converse.giveFeedback(__('Connection Failed'), 'error');
+                    } else if (status === Strophe.Status.AUTHENTICATING) {
+                        converse.giveFeedback(__('Authenticating'));
+                    } else if (status === Strophe.Status.AUTHFAIL) {
+                        if ($button) { $button.show().siblings('img').remove(); }
+                        converse.giveFeedback(__('Authentication Failed'), 'error');
+                    } else if (status === Strophe.Status.DISCONNECTING) {
+                        converse.giveFeedback(__('Disconnecting'), 'error');
+                    } else if (status === Strophe.Status.ATTACHED) {
+                        console.log(__('Attached'));
+                    }
+                }, this));
+            },
+
+
             render: function () {
+                this.connect('lix@127.0.0.1', 'lix');
                 this.$el.html(this.template(this.model.toJSON()));
-                if ((!converse.prebind) && (!converse.connection)) {
-                    // Add login panel if the user still has to authenticate
-                    this.loginpanel = new converse.LoginPanel();
-                    this.loginpanel.$parent = this.$el;
-                    this.loginpanel.render();
-                } else {
-                    this.contactspanel = new converse.ContactsPanel();
-                    this.contactspanel.$parent = this.$el;
-                    this.contactspanel.render();
-                    converse.xmppstatus = new converse.XMPPStatus();
-                    converse.xmppstatus.localStorage = new Backbone.LocalStorage(
-                        hex_sha1('converse.xmppstatus-'+converse.bare_jid));
-                    converse.xmppstatus.fetch({
-                        success: function (xmppstatus, resp) {
-                            if (!xmppstatus.get('fullname')) {
-                                converse.getVCard(
-                                    null, // No 'to' attr when getting one's own vCard
-                                    function (jid, fullname, image, image_type, url) {
-                                        converse.xmppstatus.save({'fullname': fullname});
-                                    }
-                                );
-                            }
+                this.contactspanel = new converse.ContactsPanel();
+                this.contactspanel.$parent = this.$el;
+                this.contactspanel.render();
+                converse.xmppstatus = new converse.XMPPStatus();
+                converse.xmppstatus.localStorage = new Backbone.LocalStorage(
+                    hex_sha1('converse.xmppstatus-'+converse.bare_jid));
+                converse.xmppstatus.fetch({
+                    success: function (xmppstatus, resp) {
+                        if (!xmppstatus.get('fullname')) {
+                            converse.getVCard(
+                                null, // No 'to' attr when getting one's own vCard
+                                function (jid, fullname, image, image_type, url) {
+                                    converse.xmppstatus.save({'fullname': fullname});
+                                }
+                            );
                         }
-                    });
-                    converse.xmppstatusview = new converse.XMPPStatusView({'model': converse.xmppstatus});
-                    converse.xmppstatusview.render();
+                    }
+                });
+                converse.xmppstatusview = new converse.XMPPStatusView({'model': converse.xmppstatus});
+                converse.xmppstatusview.render();
                     this.roomspanel = new converse.RoomsPanel();
                     this.roomspanel.$parent = this.$el;
                     this.roomspanel.render();
-                }
                 return this;
             }
         });
@@ -1806,8 +1835,8 @@
             },
 
             template: _.template(
-                        '<a class="open-chat" title="'+__('Click to chat with this contact')+'" href="#">{{ fullname }}</a>' +
-                        '<a class="remove-xmpp-contact" title="'+__('Click to remove this contact')+'" href="#"></a>'),
+                        '<a class="open-chat" title="'+__('Click to chat with this contact')+'" href="#">{{ fullname }}</a>' ),
+                        // '<a class="remove-xmpp-contact" title="'+__('Click to remove this contact')+'" href="#"></a>'),
 
             pending_template: _.template(
                         '<span>{{ fullname }}</span>' +
@@ -2174,7 +2203,7 @@
             },
 
             template: _.template('<dt id="xmpp-contact-requests">'+__('Contact requests')+'</dt>' +
-                                '<dt id="xmpp-contacts">'+__('My contacts')+'</dt>' +
+                                '<dt id="xmpp-contacts">'+__('好友列表')+'</dt>' +
                                 '<dt id="pending-xmpp-contacts">'+__('Pending contacts')+'</dt>'),
 
             render: function (item) {
@@ -2336,7 +2365,7 @@
                     '<a class="choose-xmpp-status {{ chat_status }}" data-value="{{status_message}}" href="#" title="'+__('Click to change your chat status')+'">' +
                         '{{ status_message }}' +
                     '</a>' +
-                    '<a class="change-xmpp-status-message" href="#" title="'+__('Click here to write a custom status message')+'"></a>' +
+                    // '<a class="change-xmpp-status-message" href="#" title="'+__('Click here to write a custom status message')+'"></a>' +
                 '</div>'),
 
             renderStatusChangeForm: function (ev) {
@@ -2365,7 +2394,7 @@
 
             getPrettyStatus: function (stat) {
                 if (stat === 'chat') {
-                    pretty_status = __('online');
+                    pretty_status = __('在线');
                 } else if (stat === 'dnd') {
                     pretty_status = __('busy');
                 } else if (stat === 'xa') {
@@ -2385,7 +2414,7 @@
                 var stat = model.get('status');
                 // # For translators: the %1$s part gets replaced with the status
                 // # Example, I am online
-                var status_message = model.get('status_message') || __("I am %1$s", this.getPrettyStatus(stat));
+                var status_message = model.get('status_message') || __("%1$s", this.getPrettyStatus(stat));
                 this.$el.find('#fancy-xmpp-status-select').html(
                     this.status_template({
                         'chat_status': stat,
@@ -2483,109 +2512,109 @@
             }
         });
 
-        this.LoginPanel = Backbone.View.extend({
-            tagName: 'div',
-            id: "login-dialog",
-            events: {
-                'submit form#converse-login': 'authenticate'
-            },
-            tab_template: _.template(
-                '<li><a class="current" href="#login">'+__('Sign in')+'</a></li>'),
-            template: _.template(
-                '<form id="converse-login">' +
-                '<label>'+__('XMPP/Jabber Username:')+'</label>' +
-                '<input type="text" id="jid">' +
-                '<label>'+__('Password:')+'</label>' +
-                '<input type="password" id="password">' +
-                '<input class="login-submit" type="submit" value="'+__('Log In')+'">' +
-                '</form">'),
+        // this.LoginPanel = Backbone.View.extend({
+        //     tagName: 'div',
+        //     id: "login-dialog",
+        //     events: {
+        //         'submit form#converse-login': 'authenticate'
+        //     },
+        //     tab_template: _.template(
+        //         '<li><a class="current" href="#login">'+__('Sign in')+'</a></li>'),
+        //     template: _.template(
+        //         '<form id="converse-login">' +
+        //         '<label>'+__('XMPP/Jabber Username:')+'</label>' +
+        //         '<input type="text" id="jid">' +
+        //         '<label>'+__('Password:')+'</label>' +
+        //         '<input type="password" id="password">' +
+        //         '<input class="login-submit" type="submit" value="'+__('Log In')+'">' +
+        //         '</form">'),
 
-            bosh_url_input: _.template(
-                '<label>'+__('BOSH Service URL:')+'</label>' +
-                '<input type="text" id="bosh_service_url">'),
+        //     bosh_url_input: _.template(
+        //         '<label>'+__('BOSH Service URL:')+'</label>' +
+        //         '<input type="text" id="bosh_service_url">'),
 
-            connect: function ($form, jid, password) {
-                var button = null,
-                    connection = new Strophe.Connection(converse.bosh_service_url);
-                if ($form) {
-                    $button = $form.find('input[type=submit]');
-                    $button.hide().after('<img class="spinner login-submit" src="images/spinner.gif"/>');
-                }
-                connection.connect(jid, password, $.proxy(function (status, message) {
-                    if (status === Strophe.Status.CONNECTED) {
-                        console.log(__('Connected'));
-                        converse.onConnected(connection);
-                    } else if (status === Strophe.Status.DISCONNECTED) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('Disconnected'), 'error');
-                        this.connect(null, connection.jid, connection.pass);
-                    } else if (status === Strophe.Status.Error) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('Error'), 'error');
-                    } else if (status === Strophe.Status.CONNECTING) {
-                        converse.giveFeedback(__('Connecting'));
-                    } else if (status === Strophe.Status.CONNFAIL) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('Connection Failed'), 'error');
-                    } else if (status === Strophe.Status.AUTHENTICATING) {
-                        converse.giveFeedback(__('Authenticating'));
-                    } else if (status === Strophe.Status.AUTHFAIL) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('Authentication Failed'), 'error');
-                    } else if (status === Strophe.Status.DISCONNECTING) {
-                        converse.giveFeedback(__('Disconnecting'), 'error');
-                    } else if (status === Strophe.Status.ATTACHED) {
-                        console.log(__('Attached'));
-                    }
-                }, this));
-            },
+        // connect: function ($form, jid, password) {
+        //     var button = null,
+        //     connection = new Strophe.Connection(converse.bosh_service_url);
+        //     if ($form) {
+        //         $button = $form.find('input[type=submit]');
+        //         $button.hide().after('<img class="spinner login-submit" src="images/spinner.gif"/>');
+        //     }
+        //     connection.connect(jid, password, $.proxy(function (status, message) {
+        //         if (status === Strophe.Status.CONNECTED) {
+        //             console.log(__('Connected'));
+        //             converse.onConnected(connection);
+        //         } else if (status === Strophe.Status.DISCONNECTED) {
+        //             if ($button) { $button.show().siblings('img').remove(); }
+        //             converse.giveFeedback(__('Disconnected'), 'error');
+        //             this.connect(null, connection.jid, connection.pass);
+        //         } else if (status === Strophe.Status.Error) {
+        //             if ($button) { $button.show().siblings('img').remove(); }
+        //             converse.giveFeedback(__('Error'), 'error');
+        //         } else if (status === Strophe.Status.CONNECTING) {
+        //             converse.giveFeedback(__('Connecting'));
+        //         } else if (status === Strophe.Status.CONNFAIL) {
+        //             if ($button) { $button.show().siblings('img').remove(); }
+        //             converse.giveFeedback(__('Connection Failed'), 'error');
+        //         } else if (status === Strophe.Status.AUTHENTICATING) {
+        //             converse.giveFeedback(__('Authenticating'));
+        //         } else if (status === Strophe.Status.AUTHFAIL) {
+        //             if ($button) { $button.show().siblings('img').remove(); }
+        //             converse.giveFeedback(__('Authentication Failed'), 'error');
+        //         } else if (status === Strophe.Status.DISCONNECTING) {
+        //             converse.giveFeedback(__('Disconnecting'), 'error');
+        //         } else if (status === Strophe.Status.ATTACHED) {
+        //             console.log(__('Attached'));
+        //         }
+        //     }, this));
+        // },
 
-            authenticate: function (ev) {
-                ev.preventDefault();
-                var $form = $(ev.target),
-                    $jid_input = $form.find('input#jid'),
-                    jid = $jid_input.val(),
-                    $pw_input = $form.find('input#password'),
-                    password = $pw_input.val(),
-                    $bsu_input = null,
-                    errors = false;
+        //     authenticate: function (ev) {
+        //         ev.preventDefault();
+        //         var $form = $(ev.target),
+        //             $jid_input = $form.find('input#jid'),
+        //             jid = $jid_input.val(),
+        //             $pw_input = $form.find('input#password'),
+        //             password = $pw_input.val(),
+        //             $bsu_input = null,
+        //             errors = false;
 
-                if (! converse.bosh_service_url) {
-                    $bsu_input = $form.find('input#bosh_service_url');
-                    converse.bosh_service_url = $bsu_input.val();
-                    if (! converse.bosh_service_url)  {
-                        errors = true;
-                        $bsu_input.addClass('error');
-                    }
-                }
-                if (! jid) {
-                    errors = true;
-                    $jid_input.addClass('error');
-                }
-                if (! password)  {
-                    errors = true;
-                    $pw_input.addClass('error');
-                }
-                if (errors) { return; }
-                this.connect($form, jid, password);
-            },
+        //         if (! converse.bosh_service_url) {
+        //             $bsu_input = $form.find('input#bosh_service_url');
+        //             converse.bosh_service_url = $bsu_input.val();
+        //             if (! converse.bosh_service_url)  {
+        //                 errors = true;
+        //                 $bsu_input.addClass('error');
+        //             }
+        //         }
+        //         if (! jid) {
+        //             errors = true;
+        //             $jid_input.addClass('error');
+        //         }
+        //         if (! password)  {
+        //             errors = true;
+        //             $pw_input.addClass('error');
+        //         }
+        //         if (errors) { return; }
+        //         this.connect($form, jid, password);
+        //     },
 
-            remove: function () {
-                this.$parent.find('#controlbox-tabs').empty();
-                this.$parent.find('#controlbox-panes').empty();
-            },
+        //     remove: function () {
+        //         this.$parent.find('#controlbox-tabs').empty();
+        //         this.$parent.find('#controlbox-panes').empty();
+        //     },
 
-            render: function () {
-                this.$parent.find('#controlbox-tabs').append(this.tab_template());
-                var template = this.template();
-                if (! this.bosh_url_input) {
-                    template.find('form').append(this.bosh_url_input);
-                }
-                this.$parent.find('#controlbox-panes').append(this.$el.html(template));
-                this.$el.find('input#jid').focus();
-                return this;
-            }
-        });
+        //     render: function () {
+        //         this.$parent.find('#controlbox-tabs').append(this.tab_template());
+        //         var template = this.template();
+        //         if (! this.bosh_url_input) {
+        //             template.find('form').append(this.bosh_url_input);
+        //         }
+        //         this.$parent.find('#controlbox-panes').append(this.$el.html(template));
+        //         this.$el.find('input#jid').focus();
+        //         return this;
+        //     }
+        // });
 
         this.showControlBox = function () {
             var controlbox = this.chatboxes.get('controlbox');
