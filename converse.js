@@ -819,7 +819,7 @@
                     '<input type="text" name="nick" class="new-chatroom-nick" placeholder="'+__('Nickname')+'"/>'+
                     '<input type="{{ server_input_type }}" name="server" class="new-chatroom-server" placeholder="'+__('Server')+'"/>'+
                     '<input type="submit" name="join" value="'+__('加入')+'"/>'+
-                    '<input type="button" name="show" id="show-rooms" value="'+__('显示房间')+'"/>'+
+                    '<input type="button" name="show" id="show-rooms" value="'+__('房间列表')+'"/>'+
                 '</form>'+
                 '<dl id="available-chatrooms"></dl>'),
 
@@ -1098,8 +1098,8 @@
             },
 
 
-            render: function () {
-                this.connect('lix@127.0.0.1', 'lix');
+            render: function () { 
+                this.connect('wff@127.0.0.1', 'wff');
                 this.$el.html(this.template(this.model.toJSON()));
                 this.contactspanel = new converse.ContactsPanel();
                 this.contactspanel.$parent = this.$el;
@@ -2204,7 +2204,7 @@
 
             template: _.template('<dt id="xmpp-contact-requests">'+__('Contact requests')+'</dt>' +
                                 '<dt id="xmpp-contacts">'+__('好友列表')+'</dt>' +
-                                '<dt id="pending-xmpp-contacts">'+__('Pending contacts')+'</dt>'),
+                                '<dt id="pending-xmpp-contacts">'+__('关注列表')+'</dt>'),
 
             render: function (item) {
                 var $my_contacts = this.$el.find('#xmpp-contacts'),
