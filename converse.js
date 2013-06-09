@@ -618,8 +618,6 @@
             id: 'users',
             events: {
                 'click a.toggle-xmpp-contact-form': 'toggleContactForm',
-                //'submit form.add-xmpp-contact': 'addContactFromForm',
-                //'submit form.search-xmpp-contact': 'searchContacts',
                 'click a.subscribe-to-user': 'addContactFromList'
             },
 
@@ -629,49 +627,15 @@
                     '<span id="xmpp-status-holder">'+
                         '<select id="select-xmpp-status" style="display:none">'+
                             '<option value="online">'+__('在线')+'</option>'+
-                            // '<option value="dnd">'+__('Busy')+'</option>'+
-                            // '<option value="away">'+__('Away')+'</option>'+
                             '<option value="offline">'+__('隐身')+'</option>'+
                         '</select>'+
                     '</span>'+
-                '</form>'
-                // '<dl class="add-converse-contact dropdown">' +
-                //     '<dt id="xmpp-contact-search" class="fancy-dropdown">' +
-                //         '<a class="toggle-xmpp-contact-form" href="#"'+
-                //             'title="'+__('Click to add new chat contacts')+'">'+__('Add a contact')+'</a>' +
-                //     '</dt>' +
-                //     '<dd class="search-xmpp" style="display:none"><ul></ul></dd>' +
-                // '</dl>'
+                    '</form>'
             ),
-
-            // add_contact_template: _.template(
-            //     '<li>'+
-            //         '<form class="add-xmpp-contact">' +
-            //             '<input type="text" name="identifier" class="username" placeholder="'+__('Contact username')+'"/>' +
-            //             '<button type="submit">'+__('Add')+'</button>' +
-            //         '</form>'+
-            //     '<li>'
-            // ),
-
-            // search_contact_template: _.template(
-            //     '<li>'+
-            //         '<form class="search-xmpp-contact">' +
-            //             '<input type="text" name="identifier" class="username" placeholder="'+__('Contact name')+'"/>' +
-            //             '<button type="submit">'+__('Search')+'</button>' +
-            //         '</form>'+
-            //     '<li>'
-            // ),
-
+            
             render: function () {
-                var markup;
                 this.$parent.find('#controlbox-tabs').append(this.tab_template());
                 this.$parent.find('#controlbox-panes').append(this.$el.html(this.template()));
-                // if (converse.xhr_user_search) {
-                //     markup = this.search_contact_template();
-                // } else {
-                //     markup = this.add_contact_template();
-                // }
-                this.$el.find('.search-xmpp ul').append(markup);
                 this.$el.append(converse.rosterview.$el);
 
                 return this;
@@ -686,70 +650,6 @@
                 });
             },
 
-            // searchContacts: function (ev) {
-            //     ev.preventDefault();
-            //     $.getJSON(portal_url + "/search-users?q=" + $(ev.target).find('input.username').val(), function (data) {
-            //         var $ul= $('.search-xmpp ul');
-            //         $ul.find('li.found-user').remove();
-            //         $ul.find('li.chat-info').remove();
-            //         if (!data.length) {
-            //             $ul.append('<li class="chat-info">'+__('No users found')+'</li>');
-            //         }
-
-            //         $(data).each(function (idx, obj) {
-            //             $ul.append(
-            //                 $('<li class="found-user"></li>')
-            //                 .append(
-            //                     $('<a class="subscribe-to-user" href="#" title="'+__('Click to add as a chat contact')+'"></a>')
-            //                     .attr('data-recipient', Strophe.escapeNode(obj.id)+'@'+converse.domain)
-            //                     .text(obj.fullname)
-            //                 )
-            //             );
-            //         });
-            //     });
-            // },
-
-            // addContactFromForm: function (ev) {
-            //     ev.preventDefault();
-            //     var $input = $(ev.target).find('input');
-            //     var jid = $input.val();
-            //     if (! jid) {
-            //         // this is not a valid JID
-            //         $input.addClass('error');
-            //         return;
-            //     }
-            //     converse.getVCard(
-            //         jid,
-            //         $.proxy(function (jid, fullname, image, image_type, url) {
-            //             this.addContact(jid, fullname);
-            //         }, this),
-            //         $.proxy(function (stanza) {
-            //             console.log("An error occured while fetching vcard");
-            //             if ($(stanza).find('error').attr('code') == '503') {
-            //                 // If we get service-unavailable, we continue to create
-            //                 // the user
-            //                 var jid = $(stanza).attr('from');
-            //                 this.addContact(jid, jid);
-            //             }
-            //         }, this));
-            //     $('.search-xmpp').hide();
-            // },
-
-            // addContactFromList: function (ev) {
-            //     ev.preventDefault();
-            //     var $target = $(ev.target),
-            //         jid = $target.attr('data-recipient'),
-            //         name = $target.text();
-            //     this.addContact(jid, name);
-            //     $target.parent().remove();
-            //     $('.search-xmpp').hide();
-            // },
-
-            // addContact: function (jid, name) {
-            //     converse.connection.roster.add(jid, name, [], function (iq) {
-            //         converse.connection.roster.subscribe(jid, null, converse.xmppstatus.get('fullname'));
-            //     });
-            // }
         });
 
         this.RoomsPanel = Backbone.View.extend({
@@ -1064,42 +964,8 @@
                 return;
             },
 
-            connect: function (jid, password) {
-                var button = null,
-                    connection = new Strophe.Connection(converse.bosh_service_url);
-
-                connection.connect(jid, password, $.proxy(function (status, message) {
-                    if (status === Strophe.Status.CONNECTED) {
-                        console.log(__('Connected'));
-                        converse.onConnected(connection);
-                    } else if (status === Strophe.Status.DISCONNECTED) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('Disconnected'), 'error');
-                        this.connect(null, connection.jid, connection.pass);
-                    } else if (status === Strophe.Status.Error) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('Error'), 'error');
-                    } else if (status === Strophe.Status.CONNECTING) {
-                        converse.giveFeedback(__('Connecting'));
-                    } else if (status === Strophe.Status.CONNFAIL) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('Connection Failed'), 'error');
-                    } else if (status === Strophe.Status.AUTHENTICATING) {
-                        converse.giveFeedback(__('Authenticating'));
-                    } else if (status === Strophe.Status.AUTHFAIL) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('Authentication Failed'), 'error');
-                    } else if (status === Strophe.Status.DISCONNECTING) {
-                        converse.giveFeedback(__('Disconnecting'), 'error');
-                    } else if (status === Strophe.Status.ATTACHED) {
-                        console.log(__('Attached'));
-                    }
-                }, this));
-            },
-
-
             render: function () { 
-                this.connect('wff@127.0.0.1', 'wff');
+                
                 this.$el.html(this.template(this.model.toJSON()));
                 this.contactspanel = new converse.ContactsPanel();
                 this.contactspanel.$parent = this.$el;
@@ -2394,7 +2260,7 @@
 
             getPrettyStatus: function (stat) {
                 if (stat === 'chat') {
-                    pretty_status = __('在线');
+                    pretty_status = __('online');
                 } else if (stat === 'dnd') {
                     pretty_status = __('busy');
                 } else if (stat === 'xa') {
@@ -2512,111 +2378,39 @@
             }
         });
 
-        // this.LoginPanel = Backbone.View.extend({
-        //     tagName: 'div',
-        //     id: "login-dialog",
-        //     events: {
-        //         'submit form#converse-login': 'authenticate'
-        //     },
-        //     tab_template: _.template(
-        //         '<li><a class="current" href="#login">'+__('Sign in')+'</a></li>'),
-        //     template: _.template(
-        //         '<form id="converse-login">' +
-        //         '<label>'+__('XMPP/Jabber Username:')+'</label>' +
-        //         '<input type="text" id="jid">' +
-        //         '<label>'+__('Password:')+'</label>' +
-        //         '<input type="password" id="password">' +
-        //         '<input class="login-submit" type="submit" value="'+__('Log In')+'">' +
-        //         '</form">'),
-
-        //     bosh_url_input: _.template(
-        //         '<label>'+__('BOSH Service URL:')+'</label>' +
-        //         '<input type="text" id="bosh_service_url">'),
-
-        // connect: function ($form, jid, password) {
-        //     var button = null,
-        //     connection = new Strophe.Connection(converse.bosh_service_url);
-        //     if ($form) {
-        //         $button = $form.find('input[type=submit]');
-        //         $button.hide().after('<img class="spinner login-submit" src="images/spinner.gif"/>');
-        //     }
-        //     connection.connect(jid, password, $.proxy(function (status, message) {
-        //         if (status === Strophe.Status.CONNECTED) {
-        //             console.log(__('Connected'));
-        //             converse.onConnected(connection);
-        //         } else if (status === Strophe.Status.DISCONNECTED) {
-        //             if ($button) { $button.show().siblings('img').remove(); }
-        //             converse.giveFeedback(__('Disconnected'), 'error');
-        //             this.connect(null, connection.jid, connection.pass);
-        //         } else if (status === Strophe.Status.Error) {
-        //             if ($button) { $button.show().siblings('img').remove(); }
-        //             converse.giveFeedback(__('Error'), 'error');
-        //         } else if (status === Strophe.Status.CONNECTING) {
-        //             converse.giveFeedback(__('Connecting'));
-        //         } else if (status === Strophe.Status.CONNFAIL) {
-        //             if ($button) { $button.show().siblings('img').remove(); }
-        //             converse.giveFeedback(__('Connection Failed'), 'error');
-        //         } else if (status === Strophe.Status.AUTHENTICATING) {
-        //             converse.giveFeedback(__('Authenticating'));
-        //         } else if (status === Strophe.Status.AUTHFAIL) {
-        //             if ($button) { $button.show().siblings('img').remove(); }
-        //             converse.giveFeedback(__('Authentication Failed'), 'error');
-        //         } else if (status === Strophe.Status.DISCONNECTING) {
-        //             converse.giveFeedback(__('Disconnecting'), 'error');
-        //         } else if (status === Strophe.Status.ATTACHED) {
-        //             console.log(__('Attached'));
-        //         }
-        //     }, this));
-        // },
-
-        //     authenticate: function (ev) {
-        //         ev.preventDefault();
-        //         var $form = $(ev.target),
-        //             $jid_input = $form.find('input#jid'),
-        //             jid = $jid_input.val(),
-        //             $pw_input = $form.find('input#password'),
-        //             password = $pw_input.val(),
-        //             $bsu_input = null,
-        //             errors = false;
-
-        //         if (! converse.bosh_service_url) {
-        //             $bsu_input = $form.find('input#bosh_service_url');
-        //             converse.bosh_service_url = $bsu_input.val();
-        //             if (! converse.bosh_service_url)  {
-        //                 errors = true;
-        //                 $bsu_input.addClass('error');
-        //             }
-        //         }
-        //         if (! jid) {
-        //             errors = true;
-        //             $jid_input.addClass('error');
-        //         }
-        //         if (! password)  {
-        //             errors = true;
-        //             $pw_input.addClass('error');
-        //         }
-        //         if (errors) { return; }
-        //         this.connect($form, jid, password);
-        //     },
-
-        //     remove: function () {
-        //         this.$parent.find('#controlbox-tabs').empty();
-        //         this.$parent.find('#controlbox-panes').empty();
-        //     },
-
-        //     render: function () {
-        //         this.$parent.find('#controlbox-tabs').append(this.tab_template());
-        //         var template = this.template();
-        //         if (! this.bosh_url_input) {
-        //             template.find('form').append(this.bosh_url_input);
-        //         }
-        //         this.$parent.find('#controlbox-panes').append(this.$el.html(template));
-        //         this.$el.find('input#jid').focus();
-        //         return this;
-        //     }
-        // });
-
         this.showControlBox = function () {
+
+            if(!this.connection){
+            connection = new Strophe.Connection(converse.bosh_service_url);
+                connection.connect('lix@127.0.0.1', 'lix', $.proxy(function (status, message) {
+                    if (status === Strophe.Status.CONNECTED) {
+                        console.log(__('Connected'));
+                        converse.onConnected(connection);
+                    } else if (status === Strophe.Status.DISCONNECTED) {
+                        if ($button) { $button.show().siblings('img').remove(); }
+                        converse.giveFeedback(__('Disconnected'), 'error');
+                        this.connect(null, connection.jid, connection.pass);
+                    } else if (status === Strophe.Status.Error) {
+                        if ($button) { $button.show().siblings('img').remove(); }
+                        converse.giveFeedback(__('Error'), 'error');
+                    } else if (status === Strophe.Status.CONNECTING) {
+                        converse.giveFeedback(__('Connecting'));
+                    } else if (status === Strophe.Status.CONNFAIL) {
+                        if ($button) { $button.show().siblings('img').remove(); }
+                        converse.giveFeedback(__('Connection Failed'), 'error');
+                    } else if (status === Strophe.Status.AUTHENTICATING) {
+                        converse.giveFeedback(__('Authenticating'));
+                    } else if (status === Strophe.Status.AUTHFAIL) {
+                        if ($button) { $button.show().siblings('img').remove(); }
+                        converse.giveFeedback(__('Authentication Failed'), 'error');
+                    } else if (status === Strophe.Status.DISCONNECTING) {
+                        converse.giveFeedback(__('Disconnecting'), 'error');
+                    } else if (status === Strophe.Status.ATTACHED) {
+                        console.log(__('Attached'));
+                    }
+                }, this));
+            }
+
             var controlbox = this.chatboxes.get('controlbox');
             if (!controlbox) {
                 this.chatboxes.add({
@@ -2678,15 +2472,15 @@
 
             this.connection.roster.get($.proxy(function (a) {
                 this.connection.addHandler(
-                        $.proxy(function (presence) {
-                            this.presenceHandler(presence);
-                            return true;
-                        }, this.roster), null, 'presence', null);
+                    $.proxy(function (presence) {
+                        this.presenceHandler(presence);
+                        return true;
+                    }, this.roster), null, 'presence', null);
                 this.connection.addHandler(
-                        $.proxy(function (message) {
-                            this.chatboxes.messageReceived(message);
-                            return true;
-                        }, this), null, 'message', 'chat');
+                    $.proxy(function (message) {
+                        this.chatboxes.messageReceived(message);
+                        return true;
+                    }, this), null, 'message', 'chat');
             }, this));
 
             $(window).on("blur focus", $.proxy(function(e) {
@@ -2707,9 +2501,12 @@
                 e.preventDefault(); this.toggleControlBox();
             }, this)
         );
-        if (this.show_controlbox_by_default) {
-            this.toggleControlBox();
-        }
+        // if (this.show_controlbox_by_default) {
+        //     this.toggleControlBox();
+        // }
+
+
     };
     return converse;
 }));
+
