@@ -125,8 +125,8 @@
 
         this.parseISO8601 = function (datestr) {
             /* Parses string formatted as 2013-02-14T11:27:08.268Z to a Date obj.
-             */
-            var numericKeys = [1, 4, 5, 6, 7, 10, 11],
+            */
+            var numericKeys = [1, 4, 5, 6, 7, 10, 11],
                 struct = /^\s*(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}\.?\d*)Z\s*$/.exec(datestr),
                 minutesOffset = 0,
                 i, k;
@@ -539,7 +539,7 @@
             template: _.template(
                 '<div class="chat-head chat-head-chatbox">' +
                     '<a class="close-chatbox-button">X</a>' +
-                    '<a href="#" class="user">' +
+                    '<a href="{{url}}" target="_blank" class="user">' +
                         '<div class="chat-title"> {{ fullname }} </div>' +
                     '</a>' +
                     '<p class="user-custom-message"><p/>' +
@@ -618,26 +618,61 @@
             id: 'users',
             events: {
                 'click a.toggle-xmpp-contact-form': 'toggleContactForm',
+                'submit form.add-xmpp-contact': 'addContactFromForm',
+                'submit form.search-xmpp-contact': 'searchContacts',
                 'click a.subscribe-to-user': 'addContactFromList'
             },
 
-            tab_template: _.template('<li><a class="s current" href="#users">'+__('聊天')+'</a></li>'),
+            tab_template: _.template('<li><a class="s current" href="#users">'+__('Contacts')+'</a></li>'),
             template: _.template(
                 '<form class="set-xmpp-status" action="" method="post">'+
                     '<span id="xmpp-status-holder">'+
                         '<select id="select-xmpp-status" style="display:none">'+
-                            '<option value="online">'+__('在线')+'</option>'+
-                            '<option value="offline">'+__('隐身')+'</option>'+
+                            '<option value="online">'+__('Online')+'</option>'+
+                            '<option value="dnd">'+__('Busy')+'</option>'+
+                            '<option value="away">'+__('Away')+'</option>'+
+                            '<option value="offline">'+__('Offline')+'</option>'+
                         '</select>'+
                     '</span>'+
-                    '</form>'
+                '</form>'+
+                '<dl class="add-converse-contact dropdown">' +
+                    '<dt id="xmpp-contact-search" class="fancy-dropdown">' +
+                        '<a class="toggle-xmpp-contact-form" href="#"'+
+                            'title="'+__('Click to add new chat contacts')+'">'+__('Add a contact')+'</a>' +
+                    '</dt>' +
+                    '<dd class="search-xmpp" style="display:none"><ul></ul></dd>' +
+                '</dl>'
             ),
-            
+
+            add_contact_template: _.template(
+                '<li>'+
+                    '<form class="add-xmpp-contact">' +
+                        '<input type="text" name="identifier" class="username" placeholder="'+__('Contact username')+'"/>' +
+                        '<button type="submit">'+__('Add')+'</button>' +
+                    '</form>'+
+                '<li>'
+            ),
+
+            search_contact_template: _.template(
+                '<li>'+
+                    '<form class="search-xmpp-contact">' +
+                        '<input type="text" name="identifier" class="username" placeholder="'+__('Contact name')+'"/>' +
+                        '<button type="submit">'+__('Search')+'</button>' +
+                    '</form>'+
+                '<li>'
+            ),
+
             render: function () {
+                var markup;
                 this.$parent.find('#controlbox-tabs').append(this.tab_template());
                 this.$parent.find('#controlbox-panes').append(this.$el.html(this.template()));
+                if (converse.xhr_user_search) {
+                    markup = this.search_contact_template();
+                } else {
+                    markup = this.add_contact_template();
+                }
+                this.$el.find('.search-xmpp ul').append(markup);
                 this.$el.append(converse.rosterview.$el);
-
                 return this;
             },
 
@@ -650,6 +685,70 @@
                 });
             },
 
+            searchContacts: function (ev) {
+                ev.preventDefault();
+                $.getJSON(portal_url + "/search-users?q=" + $(ev.target).find('input.username').val(), function (data) {
+                    var $ul= $('.search-xmpp ul');
+                    $ul.find('li.found-user').remove();
+                    $ul.find('li.chat-info').remove();
+                    if (!data.length) {
+                        $ul.append('<li class="chat-info">'+__('No users found')+'</li>');
+                    }
+
+                    $(data).each(function (idx, obj) {
+                        $ul.append(
+                            $('<li class="found-user"></li>')
+                            .append(
+                                $('<a class="subscribe-to-user" href="#" title="'+__('Click to add as a chat contact')+'"></a>')
+                                .attr('data-recipient', Strophe.escapeNode(obj.id)+'@'+converse.domain)
+                                .text(obj.fullname)
+                            )
+                        );
+                    });
+                });
+            },
+
+            addContactFromForm: function (ev) {
+                ev.preventDefault();
+                var $input = $(ev.target).find('input');
+                var jid = $input.val();
+                if (! jid) {
+                    // this is not a valid JID
+                    $input.addClass('error');
+                    return;
+                }
+                converse.getVCard(
+                    jid,
+                    $.proxy(function (jid, fullname, image, image_type, url) {
+                        this.addContact(jid, fullname);
+                    }, this),
+                    $.proxy(function (stanza) {
+                        console.log("An error occured while fetching vcard");
+                        if ($(stanza).find('error').attr('code') == '503') {
+                            // If we get service-unavailable, we continue to create
+                            // the user
+                            var jid = $(stanza).attr('from');
+                            this.addContact(jid, jid);
+                        }
+                    }, this));
+                $('.search-xmpp').hide();
+            },
+
+            addContactFromList: function (ev) {
+                ev.preventDefault();
+                var $target = $(ev.target),
+                    jid = $target.attr('data-recipient'),
+                    name = $target.text();
+                this.addContact(jid, name);
+                $target.parent().remove();
+                $('.search-xmpp').hide();
+            },
+
+            addContact: function (jid, name) {
+                converse.connection.roster.add(jid, name, [], function (iq) {
+                    converse.connection.roster.subscribe(jid, null, converse.xmppstatus.get('fullname'));
+                });
+            }
         });
 
         this.RoomsPanel = Backbone.View.extend({
@@ -711,15 +810,15 @@
                 '</div>'
             ),
 
-            tab_template: _.template('<li><a class="s" href="#chatrooms">'+__('群聊')+'</a></li>'),
+            tab_template: _.template('<li><a class="s" href="#chatrooms">'+__('Rooms')+'</a></li>'),
 
             template: _.template(
                 '<form class="add-chatroom" action="" method="post">'+
                     '<input type="text" name="chatroom" class="new-chatroom-name" placeholder="'+__('Room name')+'"/>'+
                     '<input type="text" name="nick" class="new-chatroom-nick" placeholder="'+__('Nickname')+'"/>'+
                     '<input type="{{ server_input_type }}" name="server" class="new-chatroom-server" placeholder="'+__('Server')+'"/>'+
-                    '<input type="submit" name="join" value="'+__('加入')+'"/>'+
-                    '<input type="button" name="show" id="show-rooms" value="'+__('房间列表')+'"/>'+
+                    '<input type="submit" name="join" value="'+__('Join')+'"/>'+
+                    '<input type="button" name="show" id="show-rooms" value="'+__('Show rooms')+'"/>'+
                 '</form>'+
                 '<dl id="available-chatrooms"></dl>'),
 
@@ -964,32 +1063,72 @@
                 return;
             },
 
-            render: function () { 
-                
+            render: function () {
                 this.$el.html(this.template(this.model.toJSON()));
-                this.contactspanel = new converse.ContactsPanel();
-                this.contactspanel.$parent = this.$el;
-                this.contactspanel.render();
-                converse.xmppstatus = new converse.XMPPStatus();
-                converse.xmppstatus.localStorage = new Backbone.LocalStorage(
-                    hex_sha1('converse.xmppstatus-'+converse.bare_jid));
-                converse.xmppstatus.fetch({
-                    success: function (xmppstatus, resp) {
-                        if (!xmppstatus.get('fullname')) {
-                            converse.getVCard(
-                                null, // No 'to' attr when getting one's own vCard
-                                function (jid, fullname, image, image_type, url) {
-                                    converse.xmppstatus.save({'fullname': fullname});
-                                }
-                            );
-                        }
+                if ((!converse.prebind) && (!converse.connection)) {
+                    // Add login panel if the user still has to authenticate
+                    connection = new Strophe.Connection(converse.bosh_service_url);
+                    if (!this.connection) {
+                        connection.connect('lix@127.0.0.1', 'lix', $.proxy(function (status, message) {
+                            if (status === Strophe.Status.CONNECTED) {
+                                console.log(__('Connected'));
+                                converse.onConnected(connection);
+                            } else if (status === Strophe.Status.DISCONNECTED) {
+                                if ($button) { $button.show().siblings('img').remove(); }
+                                converse.giveFeedback(__('Disconnected'), 'error');
+                                this.connect(null, connection.jid, connection.pass);
+                            } else if (status === Strophe.Status.Error) {
+                                if ($button) { $button.show().siblings('img').remove(); }
+                                converse.giveFeedback(__('Error'), 'error');
+                            } else if (status === Strophe.Status.CONNECTING) {
+                                converse.giveFeedback(__('Connecting'));
+                            } else if (status === Strophe.Status.CONNFAIL) {
+                                if ($button) { $button.show().siblings('img').remove(); }
+                                converse.giveFeedback(__('Connection Failed'), 'error');
+                            } else if (status === Strophe.Status.AUTHENTICATING) {
+                                converse.giveFeedback(__('Authenticating'));
+                            } else if (status === Strophe.Status.AUTHFAIL) {
+                                if ($button) { $button.show().siblings('img').remove(); }
+                                converse.giveFeedback(__('Authentication Failed'), 'error');
+                            } else if (status === Strophe.Status.DISCONNECTING) {
+                                converse.giveFeedback(__('Disconnecting'), 'error');
+                            } else if (status === Strophe.Status.ATTACHED) {
+                                console.log(__('Attached'));
+                            }
+                        }, this));
                     }
-                });
-                converse.xmppstatusview = new converse.XMPPStatusView({'model': converse.xmppstatus});
-                converse.xmppstatusview.render();
+                    this.contactspanel = new converse.ContactsPanel();
+                    this.contactspanel.$parent = this.$el;
+                    this.contactspanel.render();
                     this.roomspanel = new converse.RoomsPanel();
                     this.roomspanel.$parent = this.$el;
                     this.roomspanel.render();
+
+                } else {
+                    this.contactspanel = new converse.ContactsPanel();
+                    this.contactspanel.$parent = this.$el;
+                    this.contactspanel.render();
+                    converse.xmppstatus = new converse.XMPPStatus();
+                    converse.xmppstatus.localStorage = new Backbone.LocalStorage(
+                        hex_sha1('converse.xmppstatus-'+converse.bare_jid));
+                    converse.xmppstatus.fetch({
+                        success: function (xmppstatus, resp) {
+                            if (!xmppstatus.get('fullname')) {
+                                converse.getVCard(
+                                    null, // No 'to' attr when getting one's own vCard
+                                    function (jid, fullname, image, image_type, url) {
+                                        converse.xmppstatus.save({'fullname': fullname});
+                                    }
+                                );
+                            }
+                        }
+                    });
+                    converse.xmppstatusview = new converse.XMPPStatusView({'model': converse.xmppstatus});
+                    converse.xmppstatusview.render();
+                    this.roomspanel = new converse.RoomsPanel();
+                    this.roomspanel.$parent = this.$el;
+                    this.roomspanel.render();
+                }
                 return this;
             }
         });
@@ -1007,43 +1146,43 @@
 
             sendChatRoomMessage: function (body) {
                 var match = body.replace(/^\s*/, "").match(/^\/(.*?)(?: (.*))?$/) || [false],
-                    $chat_content;
+                $chat_content;
                 switch (match[1]) {
-                    case 'msg':
-                        // TODO: Private messages
-                        break;
-                    case 'clear':
-                        this.$el.find('.chat-content').empty();
-                        break;
-                    case 'topic':
-                        converse.connection.muc.setTopic(this.model.get('jid'), match[2]);
-                        break;
-                    case 'kick':
-                        converse.connection.muc.kick(this.model.get('jid'), match[2]);
-                        break;
-                    case 'ban':
-                        converse.connection.muc.ban(this.model.get('jid'), match[2]);
-                        break;
-                    case 'op':
-                        converse.connection.muc.op(this.model.get('jid'), match[2]);
-                        break;
-                    case 'deop':
-                        converse.connection.muc.deop(this.model.get('jid'), match[2]);
-                        break;
-                    case 'help':
-                        $chat_content = this.$el.find('.chat-content');
-                        msgs = [
-                            '<strong>/help</strong>:'+__('Show this menu')+'',
-                            '<strong>/me</strong>:'+__('Write in the third person')+'',
-                            '<strong>/topic</strong>:'+__('Set chatroom topic')+'',
-                            '<strong>/kick</strong>:'+__('Kick user from chatroom')+'',
-                            '<strong>/ban</strong>:'+__('Ban user from chatroom')+'',
-                            '<strong>/clear</strong>:'+__('Remove messages')+''
-                            ];
-                        this.addHelpMessages(msgs);
-                        break;
-                    default:
-                        this.last_msgid = converse.connection.muc.groupchat(this.model.get('jid'), body);
+                case 'msg':
+                    // TODO: Private messages
+                    break;
+                case 'clear':
+                    this.$el.find('.chat-content').empty();
+                    break;
+                case 'topic':
+                    converse.connection.muc.setTopic(this.model.get('jid'), match[2]);
+                    break;
+                case 'kick':
+                    converse.connection.muc.kick(this.model.get('jid'), match[2]);
+                    break;
+                case 'ban':
+                    converse.connection.muc.ban(this.model.get('jid'), match[2]);
+                    break;
+                case 'op':
+                    converse.connection.muc.op(this.model.get('jid'), match[2]);
+                    break;
+                case 'deop':
+                    converse.connection.muc.deop(this.model.get('jid'), match[2]);
+                    break;
+                case 'help':
+                    $chat_content = this.$el.find('.chat-content');
+                    msgs = [
+                        '<strong>/help</strong>:'+__('Show this menu')+'',
+                        '<strong>/me</strong>:'+__('Write in the third person')+'',
+                        '<strong>/topic</strong>:'+__('Set chatroom topic')+'',
+                        '<strong>/kick</strong>:'+__('Kick user from chatroom')+'',
+                        '<strong>/ban</strong>:'+__('Ban user from chatroom')+'',
+                        '<strong>/clear</strong>:'+__('Remove messages')+''
+                    ];
+                    this.addHelpMessages(msgs);
+                    break;
+                default:
+                    this.last_msgid = converse.connection.muc.groupchat(this.model.get('jid'), body);
                     break;
                 }
             },
@@ -1054,27 +1193,27 @@
                     '<a class="configure-chatroom-button" style="display:none">&nbsp;</a>' +
                     '<div class="chat-title"> {{ name }} </div>' +
                     '<p class="chatroom-topic"><p/>' +
-                '</div>' +
-                '<div class="chat-body">' +
-                '<img class="spinner centered" src="images/spinner.gif"/>' +
-                '</div>'),
+                    '</div>' +
+                    '<div class="chat-body">' +
+                    '<img class="spinner centered" src="images/spinner.gif"/>' +
+                    '</div>'),
 
             chatarea_template: _.template(
                 '<div class="chat-area">' +
                     '<div class="chat-content"></div>' +
                     '<form class="sendXMPPMessage" action="" method="post">' +
-                        '<textarea type="text" class="chat-textarea" ' +
-                            'placeholder="'+__('Message')+'"/>' +
+                    '<textarea type="text" class="chat-textarea" ' +
+                    'placeholder="'+__('Message')+'"/>' +
                     '</form>' +
-                '</div>' +
-                '<div class="participants">' +
+                    '</div>' +
+                    '<div class="participants">' +
                     '<ul class="participant-list"></ul>' +
-                '</div>'
+                    '</div>'
             ),
 
             render: function () {
                 this.$el.attr('id', this.model.get('box_id'))
-                        .html(this.template(this.model.toJSON()));
+                    .html(this.template(this.model.toJSON()));
                 return this;
             },
 
@@ -1113,7 +1252,7 @@
                         $.proxy(this.onLeave, this),
                         undefined);
                 },
-                this);
+                              this);
                 this.$el.appendTo(converse.chatboxesview.$el);
                 this.render().show().model.messages.fetch({add: true});
             },
@@ -1129,11 +1268,11 @@
 
             renderConfigurationForm: function (stanza) {
                 var $form= this.$el.find('form.chatroom-form'),
-                    $stanza = $(stanza),
-                    $fields = $stanza.find('field'),
-                    title = $stanza.find('title').text(),
-                    instructions = $stanza.find('instructions').text(),
-                    i, j, options=[];
+                $stanza = $(stanza),
+                $fields = $stanza.find('field'),
+                title = $stanza.find('title').text(),
+                instructions = $stanza.find('instructions').text(),
+                i, j, options=[];
                 var input_types = {
                     'text-private': 'password',
                     'text-single': 'textline',
@@ -1190,8 +1329,8 @@
                 ev.preventDefault();
                 var that = this;
                 var $inputs = $(ev.target).find(':input:not([type=button]):not([type=submit])'),
-                    count = $inputs.length,
-                    configArray = [];
+                count = $inputs.length,
+                configArray = [];
                 $inputs.each(function () {
                     var $input = $(this), value;
                     if ($input.is('[type=checkbox]')) {
@@ -1249,10 +1388,10 @@
                 this.$el.find('.participants').hide();
                 this.$el.find('.chat-body').append(
                     $('<div class="chatroom-form-container">'+
-                        '<form class="chatroom-form">'+
-                        '<img class="spinner centered" src="images/spinner.gif"/>'+
-                        '</form>'+
-                    '</div>'));
+                      '<form class="chatroom-form">'+
+                      '<img class="spinner centered" src="images/spinner.gif"/>'+
+                      '</form>'+
+                      '</div>'));
                 converse.connection.muc.configure(
                     this.model.get('jid'),
                     $.proxy(this.renderConfigurationForm, this)
@@ -1271,12 +1410,12 @@
                 this.$el.find('img.centered.spinner').remove();
                 this.$el.find('.chat-body').append(
                     $('<div class="chatroom-form-container">'+
-                        '<form class="chatroom-form">'+
-                            '<legend>'+__('This chatroom requires a password')+'</legend>' +
-                            '<label>'+__('Password: ')+'<input type="password" name="password"/></label>' +
-                            '<input type="submit" value="'+__('Submit')+'/>' +
-                        '</form>'+
-                    '</div>'));
+                      '<form class="chatroom-form">'+
+                      '<legend>'+__('This chatroom requires a password')+'</legend>' +
+                      '<label>'+__('Password: ')+'<input type="password" name="password"/></label>' +
+                      '<input type="submit" value="'+__('Submit')+'/>' +
+                      '</form>'+
+                      '</div>'));
                 this.$el.find('.chatroom-form').on('submit', $.proxy(this.submitPassword, this));
             },
 
@@ -1330,8 +1469,8 @@
 
             showStatusMessages: function ($el, is_self) {
                 /* Check for status codes and communicate their purpose to the user
-                * See: http://xmpp.org/registrar/mucstatus.html
-                */
+                 * See: http://xmpp.org/registrar/mucstatus.html
+                 */
                 var $chat_content = this.$el.find('.chat-content'),
                     $stats = $el.find('status'),
                     disconnect_msgs = [],
@@ -1701,8 +1840,8 @@
             },
 
             template: _.template(
-                        '<a class="open-chat" title="'+__('Click to chat with this contact')+'" href="#">{{ fullname }}</a>' ),
-                        // '<a class="remove-xmpp-contact" title="'+__('Click to remove this contact')+'" href="#"></a>'),
+                        '<a class="open-chat" title="'+__('Click to chat with this contact')+'" href="#">{{ fullname }}</a>' +
+                        '<a class="remove-xmpp-contact" title="'+__('Click to remove this contact')+'" href="#"></a>'),
 
             pending_template: _.template(
                         '<span>{{ fullname }}</span>' +
@@ -2069,8 +2208,8 @@
             },
 
             template: _.template('<dt id="xmpp-contact-requests">'+__('Contact requests')+'</dt>' +
-                                '<dt id="xmpp-contacts">'+__('好友列表')+'</dt>' +
-                                '<dt id="pending-xmpp-contacts">'+__('关注列表')+'</dt>'),
+                                '<dt id="xmpp-contacts">'+__('My contacts')+'</dt>' +
+                                '<dt id="pending-xmpp-contacts">'+__('Pending contacts')+'</dt>'),
 
             render: function (item) {
                 var $my_contacts = this.$el.find('#xmpp-contacts'),
@@ -2231,7 +2370,7 @@
                     '<a class="choose-xmpp-status {{ chat_status }}" data-value="{{status_message}}" href="#" title="'+__('Click to change your chat status')+'">' +
                         '{{ status_message }}' +
                     '</a>' +
-                    // '<a class="change-xmpp-status-message" href="#" title="'+__('Click here to write a custom status message')+'"></a>' +
+                    '<a class="change-xmpp-status-message" href="#" title="'+__('Click here to write a custom status message')+'"></a>' +
                 '</div>'),
 
             renderStatusChangeForm: function (ev) {
@@ -2280,7 +2419,7 @@
                 var stat = model.get('status');
                 // # For translators: the %1$s part gets replaced with the status
                 // # Example, I am online
-                var status_message = model.get('status_message') || __("%1$s", this.getPrettyStatus(stat));
+                var status_message = model.get('status_message') || __("I am %1$s", this.getPrettyStatus(stat));
                 this.$el.find('#fancy-xmpp-status-select').html(
                     this.status_template({
                         'chat_status': stat,
@@ -2378,39 +2517,8 @@
             }
         });
 
+        
         this.showControlBox = function () {
-
-            if(!this.connection){
-            connection = new Strophe.Connection(converse.bosh_service_url);
-                connection.connect('lix@127.0.0.1', 'lix', $.proxy(function (status, message) {
-                    if (status === Strophe.Status.CONNECTED) {
-                        console.log(__('Connected'));
-                        converse.onConnected(connection);
-                    } else if (status === Strophe.Status.DISCONNECTED) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('Disconnected'), 'error');
-                        this.connect(null, connection.jid, connection.pass);
-                    } else if (status === Strophe.Status.Error) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('Error'), 'error');
-                    } else if (status === Strophe.Status.CONNECTING) {
-                        converse.giveFeedback(__('Connecting'));
-                    } else if (status === Strophe.Status.CONNFAIL) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('Connection Failed'), 'error');
-                    } else if (status === Strophe.Status.AUTHENTICATING) {
-                        converse.giveFeedback(__('Authenticating'));
-                    } else if (status === Strophe.Status.AUTHFAIL) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('Authentication Failed'), 'error');
-                    } else if (status === Strophe.Status.DISCONNECTING) {
-                        converse.giveFeedback(__('Disconnecting'), 'error');
-                    } else if (status === Strophe.Status.ATTACHED) {
-                        console.log(__('Attached'));
-                    }
-                }, this));
-            }
-
             var controlbox = this.chatboxes.get('controlbox');
             if (!controlbox) {
                 this.chatboxes.add({
@@ -2501,12 +2609,9 @@
                 e.preventDefault(); this.toggleControlBox();
             }, this)
         );
-        // if (this.show_controlbox_by_default) {
-        //     this.toggleControlBox();
-        // }
-
-
+        if (this.show_controlbox_by_default) {
+            this.toggleControlBox();
+        }
     };
     return converse;
 }));
-
