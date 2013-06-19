@@ -7,10 +7,10 @@ require_once dirname(__FILE__).'/XMPP.php';
 Class XMPPChat {
 
     //用于以管理员身份登录注册新用户
-    protected $adminUsername = 'admin';
-    protected $adminUserPassword = 'admin';
+    const ADMINUSERNAME = 'admin';
+    const ADMINUSERPASSWORD = 'admin';
 
-    const XMPPHOST = '127.0.0.1';
+    const XMPPHOST = 'localhost';
     const PORT = '5222';
     const RESOURCE = 'xmpphp';
 
@@ -24,7 +24,7 @@ Class XMPPChat {
 
     public function register($email = NULL){
 
-        $conn = new XMPPHP_XMPP (self::XMPPHOST, self::PORT, $adminUsername, $adminUserPassword, slef::RESOURCE);
+        $conn = new XMPPHP_XMPP (self::XMPPHOST, self::PORT, self::ADMINUSERNAME, self::ADMINUSERPASSWORD, self::RESOURCE);
         $conn->connect();
         $conn->processUntil('session_start');
         $conn->registerNewUser($this->username, $this->password, $email);
@@ -58,7 +58,6 @@ Class XMPPChat {
         return $uid.'@'.self::XMPPHOST; 
     }
 
-   
     public function setUserVcard(){
         $conn = new XMPPHP_XMPP (self::XMPPHOST, self::PORT, $this->username, $this->password, self::RESOURCE);
         $conn->connect();
@@ -66,10 +65,4 @@ Class XMPPChat {
         $conn->disconnect();
     }
 }
-
-$test = new XMPPChat('mayl','mayl');
-$test->addRosterContact('wff', 'wff');
-$test = new XMPPChat('wff','wff'); 
-$test->addRosterContact('mayl', 'mayl'); 
-
 ?>

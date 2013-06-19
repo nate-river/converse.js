@@ -126,7 +126,7 @@
         this.parseISO8601 = function (datestr) {
             /* Parses string formatted as 2013-02-14T11:27:08.268Z to a Date obj.
             */
-            var numericKeys = [1, 4, 5, 6, 7, 10, 11],
+            var numericKeys = [1, 4, 5, 6, 7, 10, 11],
                 struct = /^\s*(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}\.?\d*)Z\s*$/.exec(datestr),
                 minutesOffset = 0,
                 i, k;
@@ -1067,43 +1067,9 @@
                 this.$el.html(this.template(this.model.toJSON()));
                 if ((!converse.prebind) && (!converse.connection)) {
                     // Add login panel if the user still has to authenticate
-                    connection = new Strophe.Connection(converse.bosh_service_url);
-                    if (!this.connection) {
-                        connection.connect('lix@127.0.0.1', 'lix', $.proxy(function (status, message) {
-                            if (status === Strophe.Status.CONNECTED) {
-                                console.log(__('Connected'));
-                                converse.onConnected(connection);
-                            } else if (status === Strophe.Status.DISCONNECTED) {
-                                if ($button) { $button.show().siblings('img').remove(); }
-                                converse.giveFeedback(__('Disconnected'), 'error');
-                                this.connect(null, connection.jid, connection.pass);
-                            } else if (status === Strophe.Status.Error) {
-                                if ($button) { $button.show().siblings('img').remove(); }
-                                converse.giveFeedback(__('Error'), 'error');
-                            } else if (status === Strophe.Status.CONNECTING) {
-                                converse.giveFeedback(__('Connecting'));
-                            } else if (status === Strophe.Status.CONNFAIL) {
-                                if ($button) { $button.show().siblings('img').remove(); }
-                                converse.giveFeedback(__('Connection Failed'), 'error');
-                            } else if (status === Strophe.Status.AUTHENTICATING) {
-                                converse.giveFeedback(__('Authenticating'));
-                            } else if (status === Strophe.Status.AUTHFAIL) {
-                                if ($button) { $button.show().siblings('img').remove(); }
-                                converse.giveFeedback(__('Authentication Failed'), 'error');
-                            } else if (status === Strophe.Status.DISCONNECTING) {
-                                converse.giveFeedback(__('Disconnecting'), 'error');
-                            } else if (status === Strophe.Status.ATTACHED) {
-                                console.log(__('Attached'));
-                            }
-                        }, this));
-                    }
-                    this.contactspanel = new converse.ContactsPanel();
-                    this.contactspanel.$parent = this.$el;
-                    this.contactspanel.render();
-                    this.roomspanel = new converse.RoomsPanel();
-                    this.roomspanel.$parent = this.$el;
-                    this.roomspanel.render();
-
+                    this.loginpanel = new converse.LoginPanel();
+                    this.loginpanel.$parent = this.$el;
+                    this.loginpanel.render();
                 } else {
                     this.contactspanel = new converse.ContactsPanel();
                     this.contactspanel.$parent = this.$el;
@@ -1146,43 +1112,43 @@
 
             sendChatRoomMessage: function (body) {
                 var match = body.replace(/^\s*/, "").match(/^\/(.*?)(?: (.*))?$/) || [false],
-                $chat_content;
+                    $chat_content;
                 switch (match[1]) {
-                case 'msg':
-                    // TODO: Private messages
-                    break;
-                case 'clear':
-                    this.$el.find('.chat-content').empty();
-                    break;
-                case 'topic':
-                    converse.connection.muc.setTopic(this.model.get('jid'), match[2]);
-                    break;
-                case 'kick':
-                    converse.connection.muc.kick(this.model.get('jid'), match[2]);
-                    break;
-                case 'ban':
-                    converse.connection.muc.ban(this.model.get('jid'), match[2]);
-                    break;
-                case 'op':
-                    converse.connection.muc.op(this.model.get('jid'), match[2]);
-                    break;
-                case 'deop':
-                    converse.connection.muc.deop(this.model.get('jid'), match[2]);
-                    break;
-                case 'help':
-                    $chat_content = this.$el.find('.chat-content');
-                    msgs = [
-                        '<strong>/help</strong>:'+__('Show this menu')+'',
-                        '<strong>/me</strong>:'+__('Write in the third person')+'',
-                        '<strong>/topic</strong>:'+__('Set chatroom topic')+'',
-                        '<strong>/kick</strong>:'+__('Kick user from chatroom')+'',
-                        '<strong>/ban</strong>:'+__('Ban user from chatroom')+'',
-                        '<strong>/clear</strong>:'+__('Remove messages')+''
-                    ];
-                    this.addHelpMessages(msgs);
-                    break;
-                default:
-                    this.last_msgid = converse.connection.muc.groupchat(this.model.get('jid'), body);
+                    case 'msg':
+                        // TODO: Private messages
+                        break;
+                    case 'clear':
+                        this.$el.find('.chat-content').empty();
+                        break;
+                    case 'topic':
+                        converse.connection.muc.setTopic(this.model.get('jid'), match[2]);
+                        break;
+                    case 'kick':
+                        converse.connection.muc.kick(this.model.get('jid'), match[2]);
+                        break;
+                    case 'ban':
+                        converse.connection.muc.ban(this.model.get('jid'), match[2]);
+                        break;
+                    case 'op':
+                        converse.connection.muc.op(this.model.get('jid'), match[2]);
+                        break;
+                    case 'deop':
+                        converse.connection.muc.deop(this.model.get('jid'), match[2]);
+                        break;
+                    case 'help':
+                        $chat_content = this.$el.find('.chat-content');
+                        msgs = [
+                            '<strong>/help</strong>:'+__('Show this menu')+'',
+                            '<strong>/me</strong>:'+__('Write in the third person')+'',
+                            '<strong>/topic</strong>:'+__('Set chatroom topic')+'',
+                            '<strong>/kick</strong>:'+__('Kick user from chatroom')+'',
+                            '<strong>/ban</strong>:'+__('Ban user from chatroom')+'',
+                            '<strong>/clear</strong>:'+__('Remove messages')+''
+                            ];
+                        this.addHelpMessages(msgs);
+                        break;
+                    default:
+                        this.last_msgid = converse.connection.muc.groupchat(this.model.get('jid'), body);
                     break;
                 }
             },
@@ -1193,27 +1159,27 @@
                     '<a class="configure-chatroom-button" style="display:none">&nbsp;</a>' +
                     '<div class="chat-title"> {{ name }} </div>' +
                     '<p class="chatroom-topic"><p/>' +
-                    '</div>' +
-                    '<div class="chat-body">' +
-                    '<img class="spinner centered" src="images/spinner.gif"/>' +
-                    '</div>'),
+                '</div>' +
+                '<div class="chat-body">' +
+                '<img class="spinner centered" src="images/spinner.gif"/>' +
+                '</div>'),
 
             chatarea_template: _.template(
                 '<div class="chat-area">' +
                     '<div class="chat-content"></div>' +
                     '<form class="sendXMPPMessage" action="" method="post">' +
-                    '<textarea type="text" class="chat-textarea" ' +
-                    'placeholder="'+__('Message')+'"/>' +
+                        '<textarea type="text" class="chat-textarea" ' +
+                            'placeholder="'+__('Message')+'"/>' +
                     '</form>' +
-                    '</div>' +
-                    '<div class="participants">' +
+                '</div>' +
+                '<div class="participants">' +
                     '<ul class="participant-list"></ul>' +
-                    '</div>'
+                '</div>'
             ),
 
             render: function () {
                 this.$el.attr('id', this.model.get('box_id'))
-                    .html(this.template(this.model.toJSON()));
+                        .html(this.template(this.model.toJSON()));
                 return this;
             },
 
@@ -1252,7 +1218,7 @@
                         $.proxy(this.onLeave, this),
                         undefined);
                 },
-                              this);
+                this);
                 this.$el.appendTo(converse.chatboxesview.$el);
                 this.render().show().model.messages.fetch({add: true});
             },
@@ -1268,11 +1234,11 @@
 
             renderConfigurationForm: function (stanza) {
                 var $form= this.$el.find('form.chatroom-form'),
-                $stanza = $(stanza),
-                $fields = $stanza.find('field'),
-                title = $stanza.find('title').text(),
-                instructions = $stanza.find('instructions').text(),
-                i, j, options=[];
+                    $stanza = $(stanza),
+                    $fields = $stanza.find('field'),
+                    title = $stanza.find('title').text(),
+                    instructions = $stanza.find('instructions').text(),
+                    i, j, options=[];
                 var input_types = {
                     'text-private': 'password',
                     'text-single': 'textline',
@@ -1329,8 +1295,8 @@
                 ev.preventDefault();
                 var that = this;
                 var $inputs = $(ev.target).find(':input:not([type=button]):not([type=submit])'),
-                count = $inputs.length,
-                configArray = [];
+                    count = $inputs.length,
+                    configArray = [];
                 $inputs.each(function () {
                     var $input = $(this), value;
                     if ($input.is('[type=checkbox]')) {
@@ -1388,10 +1354,10 @@
                 this.$el.find('.participants').hide();
                 this.$el.find('.chat-body').append(
                     $('<div class="chatroom-form-container">'+
-                      '<form class="chatroom-form">'+
-                      '<img class="spinner centered" src="images/spinner.gif"/>'+
-                      '</form>'+
-                      '</div>'));
+                        '<form class="chatroom-form">'+
+                        '<img class="spinner centered" src="images/spinner.gif"/>'+
+                        '</form>'+
+                    '</div>'));
                 converse.connection.muc.configure(
                     this.model.get('jid'),
                     $.proxy(this.renderConfigurationForm, this)
@@ -1410,12 +1376,12 @@
                 this.$el.find('img.centered.spinner').remove();
                 this.$el.find('.chat-body').append(
                     $('<div class="chatroom-form-container">'+
-                      '<form class="chatroom-form">'+
-                      '<legend>'+__('This chatroom requires a password')+'</legend>' +
-                      '<label>'+__('Password: ')+'<input type="password" name="password"/></label>' +
-                      '<input type="submit" value="'+__('Submit')+'/>' +
-                      '</form>'+
-                      '</div>'));
+                        '<form class="chatroom-form">'+
+                            '<legend>'+__('This chatroom requires a password')+'</legend>' +
+                            '<label>'+__('Password: ')+'<input type="password" name="password"/></label>' +
+                            '<input type="submit" value="'+__('Submit')+'/>' +
+                        '</form>'+
+                    '</div>'));
                 this.$el.find('.chatroom-form').on('submit', $.proxy(this.submitPassword, this));
             },
 
@@ -1469,8 +1435,8 @@
 
             showStatusMessages: function ($el, is_self) {
                 /* Check for status codes and communicate their purpose to the user
-                 * See: http://xmpp.org/registrar/mucstatus.html
-                 */
+                * See: http://xmpp.org/registrar/mucstatus.html
+                */
                 var $chat_content = this.$el.find('.chat-content'),
                     $stats = $el.find('status'),
                     disconnect_msgs = [],
@@ -2517,7 +2483,110 @@
             }
         });
 
-        
+        this.LoginPanel = Backbone.View.extend({
+            tagName: 'div',
+            id: "login-dialog",
+            events: {
+                'submit form#converse-login': 'authenticate'
+            },
+            tab_template: _.template(
+                '<li><a class="current" href="#login">'+__('Sign in')+'</a></li>'),
+            template: _.template(
+                '<form id="converse-login">' +
+                '<label>'+__('XMPP/Jabber Username:')+'</label>' +
+                '<input type="text" id="jid">' +
+                '<label>'+__('Password:')+'</label>' +
+                '<input type="password" id="password">' +
+                '<input class="login-submit" type="submit" value="'+__('Log In')+'">' +
+                '</form">'),
+
+            bosh_url_input: _.template(
+                '<label>'+__('BOSH Service URL:')+'</label>' +
+                '<input type="text" id="bosh_service_url">'),
+
+            connect: function ($form, jid, password) {
+                var button = null,
+                    connection = new Strophe.Connection(converse.bosh_service_url);
+                if ($form) {
+                    $button = $form.find('input[type=submit]');
+                    $button.hide().after('<img class="spinner login-submit" src="images/spinner.gif"/>');
+                }
+                connection.connect(jid, password, $.proxy(function (status, message) {
+                    if (status === Strophe.Status.CONNECTED) {
+                        console.log(__('Connected'));
+                        converse.onConnected(connection);
+                    } else if (status === Strophe.Status.DISCONNECTED) {
+                        if ($button) { $button.show().siblings('img').remove(); }
+                        converse.giveFeedback(__('Disconnected'), 'error');
+                        this.connect(null, connection.jid, connection.pass);
+                    } else if (status === Strophe.Status.Error) {
+                        if ($button) { $button.show().siblings('img').remove(); }
+                        converse.giveFeedback(__('Error'), 'error');
+                    } else if (status === Strophe.Status.CONNECTING) {
+                        converse.giveFeedback(__('Connecting'));
+                    } else if (status === Strophe.Status.CONNFAIL) {
+                        if ($button) { $button.show().siblings('img').remove(); }
+                        converse.giveFeedback(__('Connection Failed'), 'error');
+                    } else if (status === Strophe.Status.AUTHENTICATING) {
+                        converse.giveFeedback(__('Authenticating'));
+                    } else if (status === Strophe.Status.AUTHFAIL) {
+                        if ($button) { $button.show().siblings('img').remove(); }
+                        converse.giveFeedback(__('Authentication Failed'), 'error');
+                    } else if (status === Strophe.Status.DISCONNECTING) {
+                        converse.giveFeedback(__('Disconnecting'), 'error');
+                    } else if (status === Strophe.Status.ATTACHED) {
+                        console.log(__('Attached'));
+                    }
+                }, this));
+            },
+
+            authenticate: function (ev) {
+                ev.preventDefault();
+                var $form = $(ev.target),
+                    $jid_input = $form.find('input#jid'),
+                    jid = $jid_input.val(),
+                    $pw_input = $form.find('input#password'),
+                    password = $pw_input.val(),
+                    $bsu_input = null,
+                    errors = false;
+
+                if (! converse.bosh_service_url) {
+                    $bsu_input = $form.find('input#bosh_service_url');
+                    converse.bosh_service_url = $bsu_input.val();
+                    if (! converse.bosh_service_url)  {
+                        errors = true;
+                        $bsu_input.addClass('error');
+                    }
+                }
+                if (! jid) {
+                    errors = true;
+                    $jid_input.addClass('error');
+                }
+                if (! password)  {
+                    errors = true;
+                    $pw_input.addClass('error');
+                }
+                if (errors) { return; }
+                this.connect($form, jid, password);
+            },
+
+            remove: function () {
+                this.$parent.find('#controlbox-tabs').empty();
+                this.$parent.find('#controlbox-panes').empty();
+            },
+
+            render: function () {
+                this.$parent.find('#controlbox-tabs').append(this.tab_template());
+                var template = this.template();
+                if (! this.bosh_url_input) {
+                    template.find('form').append(this.bosh_url_input);
+                }
+                this.$parent.find('#controlbox-panes').append(this.$el.html(template));
+                this.$el.find('input#jid').focus();
+                return this;
+            }
+        });
+
         this.showControlBox = function () {
             var controlbox = this.chatboxes.get('controlbox');
             if (!controlbox) {
@@ -2557,8 +2626,8 @@
 
         this.onConnected = function (connection) {
             this.connection = connection;
-            this.connection.xmlInput = function (body) { console.log(body); };
-            this.connection.xmlOutput = function (body) { console.log(body); };
+            this.connection.xmlInput = function (body) { console.log('input');console.log(body); };
+            this.connection.xmlOutput = function (body) { console.log('output');console.log(body); };
             this.bare_jid = Strophe.getBareJidFromJid(this.connection.jid);
             this.domain = Strophe.getDomainFromJid(this.connection.jid);
             this.features = new this.Features();
@@ -2580,15 +2649,15 @@
 
             this.connection.roster.get($.proxy(function (a) {
                 this.connection.addHandler(
-                    $.proxy(function (presence) {
-                        this.presenceHandler(presence);
-                        return true;
-                    }, this.roster), null, 'presence', null);
+                        $.proxy(function (presence) {
+                            this.presenceHandler(presence);
+                            return true;
+                        }, this.roster), null, 'presence', null);
                 this.connection.addHandler(
-                    $.proxy(function (message) {
-                        this.chatboxes.messageReceived(message);
-                        return true;
-                    }, this), null, 'message', 'chat');
+                        $.proxy(function (message) {
+                            this.chatboxes.messageReceived(message);
+                            return true;
+                        }, this), null, 'message', 'chat');
             }, this));
 
             $(window).on("blur focus", $.proxy(function(e) {
@@ -2600,6 +2669,55 @@
             this.giveFeedback(__('Online Contacts'));
         };
 
+        this.getCookie = function (c_name) {
+            if (document.cookie.length>0){
+                c_start=document.cookie.indexOf(c_name + "=")
+                if (c_start!=-1){ 
+                    c_start=c_start + c_name.length+1 
+                    c_end=document.cookie.indexOf(";",c_start)
+                    if (c_end==-1) c_end=document.cookie.length
+                    return unescape(document.cookie.substring(c_start,c_end))
+                } 
+            }
+            return "";
+        };
+        
+        var connection = new Strophe.Connection(converse.bosh_service_url);
+        connection.attach(this.getCookie('boshJid'), this.getCookie('boshSid'), parseInt(this.getCookie('boshRid'),10) - 2,function () { 
+                converse.onConnected(connection)
+        });
+
+        // console.log(connection);
+ 
+        // connection = new Strophe.Connection(converse.bosh_service_url);
+        // connection.connect('lix@192.168.1.120', 'lix', $.proxy(function (status, message) {
+        //     if (status === Strophe.Status.CONNECTED) {
+        //         console.log(__('Connected'));
+        //         converse.onConnected(connection);
+        //     } else if (status === Strophe.Status.DISCONNECTED) {
+        //         if ($button) { $button.show().siblings('img').remove(); }
+        //         converse.giveFeedback(__('Disconnected'), 'error');
+        //         this.connect(null, connection.jid, connection.pass);
+        //     } else if (status === Strophe.Status.Error) {
+        //         if ($button) { $button.show().siblings('img').remove(); }
+        //         converse.giveFeedback(__('Error'), 'error');
+        //     } else if (status === Strophe.Status.CONNECTING) {
+        //         converse.giveFeedback(__('Connecting'));
+        //     } else if (status === Strophe.Status.CONNFAIL) {
+        //         if ($button) { $button.show().siblings('img').remove(); }
+        //         converse.giveFeedback(__('Connection Failed'), 'error');
+        //     } else if (status === Strophe.Status.AUTHENTICATING) {
+        //         converse.giveFeedback(__('Authenticating'));
+        //     } else if (status === Strophe.Status.AUTHFAIL) {
+        //         if ($button) { $button.show().siblings('img').remove(); }
+        //         converse.giveFeedback(__('Authentication Failed'), 'error');
+        //     } else if (status === Strophe.Status.DISCONNECTING) {
+        //         converse.giveFeedback(__('Disconnecting'), 'error');
+        //     } else if (status === Strophe.Status.ATTACHED) {
+        //         console.log(__('Attached'));
+        //     }
+        // }, this));
+        
         // This is the end of the initialize method.
         this.chatboxes = new this.ChatBoxes();
         this.chatboxesview = new this.ChatBoxesView({model: this.chatboxes});
