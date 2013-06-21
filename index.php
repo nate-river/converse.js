@@ -24,8 +24,6 @@ if( !(isset($_COOKIE['jid'])
         $xml_repsonse = array();
         $count = 0;
         foreach ($xmlposts as $xmlpost) {
-            var_dump('out');
-            var_dump($xmlpost);
             $count = $count + 1;
             $_jabber_rid_ = $_jabber_rid_ + 1;
             $ch = curl_init($bosh_url);
@@ -39,17 +37,14 @@ if( !(isset($_COOKIE['jid'])
             // Stops the dump to the screen and lets you capture it in a variable.
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $xmlpost);
-            $response = curl_exec($ch);
-            var_dump('come');
-            var_dump($response);
-
+            $response = curl_exec($ch);         
             $xml_response[] = simplexml_load_string($response);
         }
         curl_close($ch);
         return $xml_response;
     }
 
-    function jabber_get_rid_sid() {
+    function jabber_get_rid_sid($jid, $username, $password) {
         global $_jabber_rid_;
         $_jabber_rid_ = rand() * 10000;
         global $_jabber_sid_;
@@ -59,32 +54,21 @@ if( !(isset($_COOKIE['jid'])
         $xml_response = jabber_send_xml($xmlposts);
         $_jabber_sid_ = $xml_response[0]['sid'];
 
+        
         $xmlposts = array();
-        $jid = 'lix@192.168.1.120';
-        $username = 'lix';
-        $domain = '192.168.1.120';
-        $password = 'lix';
-
         $thepw = base64_encode(chr(0) . $username . chr(0) . $password);
         $xmlposts[] = '<body rid="'.$_jabber_rid_.'" xmlns="http://jabber.org/protocol/httpbind" sid="'.$_jabber_sid_.'"><auth xmlns="urn:ietf:params:xml:ns:xmpp-sasl" mechanism="PLAIN">'.$thepw.'</auth></body>';
         $xmlposts[] = "<body rid='" . jabber_get_next_rid() . "' xmlns='http://jabber.org/protocol/httpbind' sid='$_jabber_sid_' to='192.168.1.120' xml:lang='en' xmpp:restart='true' xmlns:xmpp='urn:xmpp:xbosh'/>";
-
         $xmlposts[] = "<body rid='" . jabber_get_next_rid() . "' xmlns='http://jabber.org/protocol/httpbind' sid='$_jabber_sid_'><iq type='set' id='_bind_auth_2' xmlns='jabber:client'><bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'></bind></iq></body>";
-
         $xmlposts[] = "<body rid='" . jabber_get_next_rid() . "' xmlns='http://jabber.org/protocol/httpbind' sid='$_jabber_sid_'><iq type='set' id='_session_auth_2' xmlns='jabber:client'><session xmlns='urn:ietf:params:xml:ns:xmpp-session'/></iq></body>";
 
         $xml_response = jabber_send_xml($xmlposts);
-
     }
 
     jabber_get_rid_sid();
-    $test['rid'] = $_jabber_rid_;
-    $test['sid'] = $_jabber_sid_;
-    $test['jid'] = 'lix@192.168.1.120';
-
-    setcookie('jid', $test['jid'], 0, '/');
-    setcookie('sid', $test['sid'], 0, '/');
-    setcookie('rid', $test['rid'], 0, '/');
+    setcookie('rid', $_jabber_rid_, 0, '/');
+    setcookie('sid', $_jabber_sid_, 0, '/');
+    setcookie('jid', 'lix@192.168.1.120', 0, '/');
 }
 ?>
 
