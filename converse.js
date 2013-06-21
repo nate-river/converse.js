@@ -2156,7 +2156,9 @@
                 this.model.on("destroy", function (item) { this.removeRosterItem(item); }, this);
 
                 this.$el.hide().html(this.template());
-                this.model.fetch({add: true}); // Get the cached roster items from localstorage
+
+                //不从localstorage读取好友列表   2013/6/21 mayl l.luffy.river@gmail.com
+                //this.model.fetch({add: true}); // Get the cached roster items from localstorage
                 // XXX: is this necessary? this.initialSort();
             },
 
@@ -2626,8 +2628,11 @@
 
         this.onConnected = function (connection) {
             this.connection = connection;
-            this.connection.xmlInput = function (body) { console.log('input');console.log(body); };
-            this.connection.xmlOutput = function (body) { console.log('output');console.log(body); };
+            this.connection.xmlInput = function (body) { console.log(body); };
+            this.connection.xmlOutput = function (body) {
+                console.log(body);
+                converse.setCookie('rid',connection.rid + 3);
+            };
             this.bare_jid = Strophe.getBareJidFromJid(this.connection.jid);
             this.domain = Strophe.getDomainFromJid(this.connection.jid);
             this.features = new this.Features();
@@ -2669,67 +2674,50 @@
             this.giveFeedback(__('Online Contacts'));
         };
 
-        this.getCookie = function (c_name) {
-            if (document.cookie.length>0){
+        this.setCookie = function(c_name, value, expiredays) {
+            var exdate=new Date()
+            exdate.setDate(exdate.getDate()+expiredays)
+            document.cookie=c_name+ "=" +escape(value)+
+                ((expiredays==null) ? "" : ";expires="+exdate.toGMTString())
+        };
+
+        this.getCookie = function(c_name) {
+            if (document.cookie.length>0) {
                 c_start=document.cookie.indexOf(c_name + "=")
-                if (c_start!=-1){ 
+                if (c_start!=-1) { 
                     c_start=c_start + c_name.length+1 
                     c_end=document.cookie.indexOf(";",c_start)
                     if (c_end==-1) c_end=document.cookie.length
                     return unescape(document.cookie.substring(c_start,c_end))
                 } 
             }
-            return "";
+            return "" 
         };
-        
-        var connection = new Strophe.Connection(converse.bosh_service_url);
-        connection.attach(this.getCookie('boshJid'), this.getCookie('boshSid'), parseInt(this.getCookie('boshRid'),10) - 2,function () { 
-                converse.onConnected(connection)
-        });
 
-        // console.log(connection);
- 
-        // connection = new Strophe.Connection(converse.bosh_service_url);
-        // connection.connect('lix@192.168.1.120', 'lix', $.proxy(function (status, message) {
-        //     if (status === Strophe.Status.CONNECTED) {
-        //         console.log(__('Connected'));
-        //         converse.onConnected(connection);
-        //     } else if (status === Strophe.Status.DISCONNECTED) {
-        //         if ($button) { $button.show().siblings('img').remove(); }
-        //         converse.giveFeedback(__('Disconnected'), 'error');
-        //         this.connect(null, connection.jid, connection.pass);
-        //     } else if (status === Strophe.Status.Error) {
-        //         if ($button) { $button.show().siblings('img').remove(); }
-        //         converse.giveFeedback(__('Error'), 'error');
-        //     } else if (status === Strophe.Status.CONNECTING) {
-        //         converse.giveFeedback(__('Connecting'));
-        //     } else if (status === Strophe.Status.CONNFAIL) {
-        //         if ($button) { $button.show().siblings('img').remove(); }
-        //         converse.giveFeedback(__('Connection Failed'), 'error');
-        //     } else if (status === Strophe.Status.AUTHENTICATING) {
-        //         converse.giveFeedback(__('Authenticating'));
-        //     } else if (status === Strophe.Status.AUTHFAIL) {
-        //         if ($button) { $button.show().siblings('img').remove(); }
-        //         converse.giveFeedback(__('Authentication Failed'), 'error');
-        //     } else if (status === Strophe.Status.DISCONNECTING) {
-        //         converse.giveFeedback(__('Disconnecting'), 'error');
-        //     } else if (status === Strophe.Status.ATTACHED) {
-        //         console.log(__('Attached'));
-        //     }
-        // }, this));
-        
         // This is the end of the initialize method.
         this.chatboxes = new this.ChatBoxes();
         this.chatboxesview = new this.ChatBoxesView({model: this.chatboxes});
+        
+        
+        if(this.getCookie('rid')) {
+            var connection = new Strophe.Connection(converse.bosh_service_url);
+            connection.attach(this.getCookie('jid'), this.getCookie('sid'), parseInt(this.getCookie('rid'),10) - 3,function (status) {
+                if ((status === Strophe.Status.ATTACHED) || (status === Strophe.Status.CONNECTED)) {
+                    converse.onConnected(connection)
+                }
+            }); 
+        }
+
         $('.toggle-online-users').bind(
             'click',
             $.proxy(function (e) {
                 e.preventDefault(); this.toggleControlBox();
             }, this)
         );
-        if (this.show_controlbox_by_default) {
-            this.toggleControlBox();
-        }
+
+        //默认显示ControlBox 2013/6/21 mayl l.luffy.river@gmail.com
+        this.showControlBox();
+
     };
     return converse;
 }));
