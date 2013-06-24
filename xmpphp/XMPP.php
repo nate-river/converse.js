@@ -253,7 +253,6 @@ class XMPPHP_XMPP extends XMPPHP_XMLStream {
         $this->log->log("Presence: {$payload['from']} [{$payload['show']}] {$payload['status']}",  XMPPHP_Log::LEVEL_DEBUG);
         if(array_key_exists('type', $xml->attrs) and $xml->attrs['type'] == 'subscribe') {
             if($this->auto_subscribe) {
-        echo 'get you!';
                 $this->send("<presence type='subscribed' to='{$xml->attrs['from']}' from='{$this->fulljid}' />");
                 $this->send("<presence type='subscribe' to='{$xml->attrs['from']}' from='{$this->fulljid}' />");
             }
@@ -485,7 +484,24 @@ class XMPPHP_XMPP extends XMPPHP_XMLStream {
               $this->event('new_user_registered', 'default');
         }
     }
+    /**
+     * $userinfo 数组
+     * 设定用户名片
+     */
+    public function setVcard($userinfo){
 
+        $jid = $userinfo['jid'];
+
+        $id = $this->getID();
+        $xml = "<iq id='$id' type='set'>";
+        $xml .= "<vCard xmlns='vcard-temp'>";
+        $xml .= "";
+        $xml .= "</vCard>";
+        $xml .= "</iq>";
+        //$this->addIdHandler($id, 'add_roster_contact_handler');
+        $this->send($xml);
+
+    }
     /**
      * Add contact to your roster
      */

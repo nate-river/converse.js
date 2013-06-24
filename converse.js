@@ -89,7 +89,6 @@
         this.xhr_user_search = false;
         _.extend(this, settings);
 
-
         var __ = function (str) {
             var t = converse.i18n.translate(str);
             if (arguments.length>1) {
@@ -539,7 +538,7 @@
             template: _.template(
                 '<div class="chat-head chat-head-chatbox">' +
                     '<a class="close-chatbox-button">X</a>' +
-                    '<a href="{{url}}" target="_blank" class="user">' +
+                    '<a href="{{url}}" class="user">' +
                         '<div class="chat-title"> {{ fullname }} </div>' +
                     '</a>' +
                     '<p class="user-custom-message"><p/>' +
@@ -636,11 +635,11 @@
                     '</span>'+
                 '</form>'+
                 '<dl class="add-converse-contact dropdown">' +
-                    '<dt id="xmpp-contact-search" class="fancy-dropdown">' +
-                        '<a class="toggle-xmpp-contact-form" href="#"'+
-                            'title="'+__('Click to add new chat contacts')+'">'+__('Add a contact')+'</a>' +
-                    '</dt>' +
-                    '<dd class="search-xmpp" style="display:none"><ul></ul></dd>' +
+                    // '<dt id="xmpp-contact-search" class="fancy-dropdown">' +
+                    // '<a class="toggle-xmpp-contact-form" href="#"'+
+                    // 'title="'+__('Click to add new chat contacts')+'">'+__('Add a contact')+'</a>' +
+                    // '</dt>' +
+                    //'<dd class="search-xmpp" style="display:none"><ul></ul></dd>' +
                 '</dl>'
             ),
 
@@ -1805,9 +1804,11 @@
                 this.model.destroy();
             },
 
-            template: _.template(
-                        '<a class="open-chat" title="'+__('Click to chat with this contact')+'" href="#">{{ fullname }}</a>' +
-                        '<a class="remove-xmpp-contact" title="'+__('Click to remove this contact')+'" href="#"></a>'),
+            template: _.template('<a class="open-chat" title="'+__('Click to chat with this contact')+'" href="#">{{ fullname }}</a>'),
+            //显示用户头像
+            //'<a style="padding:0,margin:0" href="#"><img  src="http://tp3.sinaimg.cn/2138095754/180/5639186940/1" width="10" height="10"></a>' + 
+            //不允许用户删除好友
+            //'<a class="remove-xmpp-contact" title="'+__('Click to remove this contact')+'" href="#"></a>'),
 
             pending_template: _.template(
                         '<span>{{ fullname }}</span>' +
@@ -2156,7 +2157,6 @@
                 this.model.on("destroy", function (item) { this.removeRosterItem(item); }, this);
 
                 this.$el.hide().html(this.template());
-
                 //不从localstorage读取好友列表   2013/6/21 mayl l.luffy.river@gmail.com
                 //this.model.fetch({add: true}); // Get the cached roster items from localstorage
                 // XXX: is this necessary? this.initialSort();
@@ -2631,7 +2631,7 @@
             this.connection.xmlInput = function (body) { console.log(body); };
             this.connection.xmlOutput = function (body) {
                 console.log(body);
-                converse.setCookie('rid',connection.rid + 3);
+                //converse.setCookie('rid',connection.rid + 3);
             };
             this.bare_jid = Strophe.getBareJidFromJid(this.connection.jid);
             this.domain = Strophe.getDomainFromJid(this.connection.jid);
@@ -2694,30 +2694,30 @@
             return "" 
         };
 
-        // This is the end of the initialize method.
-        this.chatboxes = new this.ChatBoxes();
-        this.chatboxesview = new this.ChatBoxesView({model: this.chatboxes});
-        
+       $('.toggle-online-users').bind(
+            'click',
+            $.proxy(function (e) {
+                e.preventDefault(); this.toggleControlBox();
+            }, this)
+        );
         
         if(this.getCookie('rid')) {
+            // This is the end of the initialize method.
+            this.chatboxes = new this.ChatBoxes();
+            this.chatboxesview = new this.ChatBoxesView({model: this.chatboxes});
+            
             var connection = new Strophe.Connection(converse.bosh_service_url);
             connection.attach(this.getCookie('jid'), this.getCookie('sid'), parseInt(this.getCookie('rid'),10) - 3,function (status) {
                 if ((status === Strophe.Status.ATTACHED) || (status === Strophe.Status.CONNECTED)) {
                     converse.onConnected(connection)
                 }
             }); 
+            //默认显示ControlBox 2013/6/21 mayl l.luffy.river@gmail.com
+            this.showControlBox();
         }
 
-        $('.toggle-online-users').bind(
-            'click',
-            $.proxy(function (e) {
-                e.preventDefault(); this.toggleControlBox();
-            }, this)
-        );
-
-        //默认显示ControlBox 2013/6/21 mayl l.luffy.river@gmail.com
-        this.showControlBox();
-
+        
+        
     };
     return converse;
 }));

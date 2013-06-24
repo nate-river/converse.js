@@ -10,7 +10,7 @@ Class XMPPChat {
     const ADMINUSERNAME = 'admin';
     const ADMINUSERPASSWORD = 'admin';
 
-    const XMPPHOST = 'localhost';
+    const XMPPHOST = '192.168.1.120';
     const PORT = '5222';
     const RESOURCE = 'xmpphp';
 
@@ -33,12 +33,11 @@ Class XMPPChat {
     }
 
     public function addRosterContact($uid, $name) {
-
         $conn = new XMPPHP_XMPP (self::XMPPHOST, self::PORT, $this->username, $this->password, self::RESOURCE);
         $conn->autoSubscribe();
 
         $conn->connect();
-        $conn->processUntil(array('message', 'presence', 'end_stream', 'session_start', 'vcard'));
+        $conn->processUntil('session_start');
         $conn->addRosterContact($this->uidToJid($uid), $name);
         $conn->subscribe($this->uidToJid($uid));
 
@@ -59,10 +58,29 @@ Class XMPPChat {
     }
 
     public function setUserVcard(){
+        $userinfo['jid'] = 'test@192.168.1.120';
         $conn = new XMPPHP_XMPP (self::XMPPHOST, self::PORT, $this->username, $this->password, self::RESOURCE);
         $conn->connect();
         $conn->processUntil('session_start');
+        $conn->setVcard($userinfo);
+        $conn->disconnect();
+    }
+
+    public function makeTwoUserFriend($user1, $user2){
+        $conn = new XMPPHP_XMPP (self::XMPPHOST, self::PORT, $user1, $user1, self::RESOURCE);
+        $conn->connect();
+        $conn->processUntil('session_start');
+        $conn->addRosterContact($this->uidToJid($user2), $user2);
+        $conn->subscribe($this->uidToJid($user2));
+        $conn->disconnect();
+
+        $conn = new XMPPHP_XMPP (self::XMPPHOST, self::PORT, $user2, $user2, self::RESOURCE);
+        $conn->connect();
+        $conn->processUntil('session_start');
+        $conn->addRosterContact($this->uidToJid($user1), $user1);
+        $conn->subscribe($this->uidToJid($user1));
         $conn->disconnect();
     }
 }
+
 ?>
