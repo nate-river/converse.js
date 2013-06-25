@@ -1746,7 +1746,9 @@
                     'id': jid,
                     'user_id': Strophe.getNodeFromJid(jid),
                     'resources': [],
-                    'status': ''
+                    'status': '',
+                    //add ima_path show user avatar use systemfile path
+                    'user_avatar_path': jid + '.jpg'
                 }, attributes);
                 attrs.sorted = false;
                 attrs.chat_status = 'offline';
@@ -1804,7 +1806,8 @@
                 this.model.destroy();
             },
 
-            template: _.template('<a class="open-chat" title="'+__('Click to chat with this contact')+'" href="#">{{ fullname }}</a>'),
+            template: _.template('<img  src="{{user_avatar_path}}" width="10px" height="10px">' +
+                                 '<a class="open-chat" title="'+__('Click to chat with this contact')+'" href="#">{{ fullname }}</a>'),
             //显示用户头像
             //'<a style="padding:0,margin:0" href="#"><img  src="http://tp3.sinaimg.cn/2138095754/180/5639186940/1" width="10" height="10"></a>' + 
             //不允许用户删除好友
@@ -2705,7 +2708,6 @@
             // This is the end of the initialize method.
             this.chatboxes = new this.ChatBoxes();
             this.chatboxesview = new this.ChatBoxesView({model: this.chatboxes});
-            
             var connection = new Strophe.Connection(converse.bosh_service_url);
             connection.attach(this.getCookie('jid'), this.getCookie('sid'), parseInt(this.getCookie('rid'),10) - 3,function (status) {
                 if ((status === Strophe.Status.ATTACHED) || (status === Strophe.Status.CONNECTED)) {
