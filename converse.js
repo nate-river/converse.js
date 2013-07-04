@@ -490,7 +490,11 @@
             },
 
             closeChat: function () {
-                this.model.trigger('hide');
+                if (converse.connection) {
+                    this.model.destroy();
+                } else {
+                    this.model.trigger('hide');
+                }
             },
 
             updateVCard: function () {
@@ -588,11 +592,6 @@
                     this.$el.css({'opacity': 0, 'display': 'inline'}).animate({opacity: '1'}, 200);
                 } else {
                     this.$el.css({'opacity': 1, 'display': 'inline'});
-                }
-                if (converse.connection) {
-                    // Without a connection, we haven't yet initialized
-                    // localstorage
-                    //this.model.set();
                 }
                 return this;
             },
@@ -1067,20 +1066,20 @@
                     this.contactspanel.$parent = this.$el;
                     this.contactspanel.render();
                     converse.xmppstatus = new converse.XMPPStatus();
-                    converse.xmppstatus.localStorage = new Backbone.LocalStorage(
-                        'converse.xmppstatus-'+converse.bare_jid);
-                    converse.xmppstatus.fetch({
-                        success: function (xmppstatus, resp) {
-                            if (!xmppstatus.get('fullname')) {
-                                converse.getVCard(
-                                    null, // No 'to' attr when getting one's own vCard
-                                    function (jid, fullname, image, image_type, url) {
-                                        converse.xmppstatus.set({'fullname': fullname});
-                                    }
-                                );
-                            }
-                        }
-                    });
+                    // converse.xmppstatus.localStorage = new Backbone.LocalStorage(
+                    //     'converse.xmppstatus-'+converse.bare_jid);
+                    // converse.xmppstatus.fetch({
+                    //     success: function (xmppstatus, resp) {
+                    //         if (!xmppstatus.get('fullname')) {
+                    //             converse.getVCard(
+                    //                 null, // No 'to' attr when getting one's own vCard
+                    //                 function (jid, fullname, image, image_type, url) {
+                    //                     converse.xmppstatus.set({'fullname': fullname});
+                    //                 }
+                    //             );
+                    //         }
+                    //     }
+                    // });
                     converse.xmppstatusview = new converse.XMPPStatusView({'model': converse.xmppstatus});
                     converse.xmppstatusview.render();
                     this.roomspanel = new converse.RoomsPanel();
