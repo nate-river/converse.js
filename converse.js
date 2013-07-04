@@ -7,10 +7,7 @@
  */
 
 // AMD/global registrations
-(function (root, factory) {
-    if (console===undefined || console.log===undefined) {
-        console = { log: function () {}, error: function () {} };
-    }
+(function (root, factory) {    
     if (typeof define === 'function' && define.amd) {
         require.config({
             paths: {
@@ -63,7 +60,7 @@
                     evaluate : /\{\[([\s\S]+?)\]\}/g,
                     interpolate : /\{\{([\s\S]+?)\}\}/g
                 };
-                return factory(jQuery, _, console);
+                return factory(jQuery, _);
             }
         );
     } else {
@@ -72,9 +69,9 @@
             evaluate : /\{\[([\s\S]+?)\]\}/g,
             interpolate : /\{\{([\s\S]+?)\}\}/g
         };
-        root.converse = factory(jQuery, _, console || {log: function(){}});
+        root.converse = factory(jQuery, _);
     }
-}(this, function ($, _, console) {
+}(this, function ($, _) {
     var converse = {};
     converse.initialize = function (settings) {
         // Default values
@@ -493,7 +490,7 @@
             },
 
             closeChat: function () {
-                    this.model.trigger('hide');
+                this.model.trigger('hide');
             },
 
             updateVCard: function () {
@@ -595,7 +592,7 @@
                 if (converse.connection) {
                     // Without a connection, we haven't yet initialized
                     // localstorage
-                    this.model.set();
+                    //this.model.set();
                 }
                 return this;
             },

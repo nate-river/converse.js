@@ -11,25 +11,18 @@
 */
 
 // AMD/global registrations
-(function (root, factory) {
-    if (typeof console === undefined || typeof console.log === undefined) {
-        console = { log: function () {}, error: function () {} };
-    }
+(function (root, factory) {    
     if (typeof define === 'function' && define.amd) { 
         define([
             "strophe"
-            ], function () {
-                if (console===undefined || console.log===undefined) {
-                    console = { log: function () {}, error: function () {} };
-                }
-                return factory(jQuery, console);
+            ], function () {                
+                return factory(jQuery);
             }
         );
     } else { 
-        return factory(jQuery, console);
+        return factory(jQuery);
     }
-}(this, function ($, console) {
-
+}(this, function ($) {
     (function() {
     var Occupant, RoomConfig, XmppRoom,
         __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
