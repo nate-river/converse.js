@@ -226,10 +226,10 @@
                 if (this.get('box_id') !== 'controlbox') {
                     this.messages = new converse.Messages();
                     this.messages.localStorage = new Backbone.LocalStorage(
-                        hex_sha1('converse.messages'+this.get('jid')));
+                        'converse.messages'+this.get('jid'));
                     this.set({
                         'user_id' : Strophe.getNodeFromJid(this.get('jid')),
-                        'box_id' : hex_sha1(this.get('jid')),
+                        'box_id' : this.get('jid'),
                         'fullname' : this.get('fullname'),
                         'url': this.get('url'),
                         'image_type': this.get('image_type'),
@@ -269,13 +269,13 @@
                     } else {
                         sender = 'them';
                     }
-                    this.messages.create({
+                    this.messages.add(new converse.Message({
                         fullname: fullname,
                         sender: sender,
                         delayed: delayed,
                         time: time,
                         message: body
-                    });
+                    }));
                 }
             }
         });
@@ -426,12 +426,12 @@
                 converse.connection.send(message);
                 converse.connection.send(forwarded);
                 // Add the new message
-                this.model.messages.create({
+                this.model.messages.add(new converse.Message({
                     fullname: converse.xmppstatus.get('fullname')||converse.bare_jid,
                     sender: 'me',
                     time: converse.toISOString(new Date()),
                     message: text
-                });
+                }));
             },
 
             keyPressed: function (ev) {
@@ -493,11 +493,7 @@
             },
 
             closeChat: function () {
-                if (converse.connection) {
-                    this.model.destroy();
-                } else {
                     this.model.trigger('hide');
-                }
             },
 
             updateVCard: function () {
@@ -507,7 +503,7 @@
                     converse.getVCard(
                         jid,
                         $.proxy(function (jid, fullname, image, image_type, url) {
-                            this.model.save({
+                            this.model.set({
                                 'fullname' : fullname || jid,
                                 'url': url,
                                 'image_type': image_type,
@@ -599,7 +595,7 @@
                 if (converse.connection) {
                     // Without a connection, we haven't yet initialized
                     // localstorage
-                    this.model.save();
+                    this.model.set();
                 }
                 return this;
             },
@@ -976,7 +972,7 @@
                     'name': Strophe.unescapeNode(Strophe.getNodeFromJid(jid)),
                     'nick': nick,
                     'chatroom': true,
-                    'box_id' : hex_sha1(jid)
+                    'box_id' : jid
                 });
                 if (!chatroom.get('connected')) {
                     converse.chatboxesview.views[jid].connect(null);
@@ -1075,14 +1071,14 @@
                     this.contactspanel.render();
                     converse.xmppstatus = new converse.XMPPStatus();
                     converse.xmppstatus.localStorage = new Backbone.LocalStorage(
-                        hex_sha1('converse.xmppstatus-'+converse.bare_jid));
+                        'converse.xmppstatus-'+converse.bare_jid);
                     converse.xmppstatus.fetch({
                         success: function (xmppstatus, resp) {
                             if (!xmppstatus.get('fullname')) {
                                 converse.getVCard(
                                     null, // No 'to' attr when getting one's own vCard
                                     function (jid, fullname, image, image_type, url) {
-                                        converse.xmppstatus.save({'fullname': fullname});
+                                        converse.xmppstatus.set({'fullname': fullname});
                                     }
                                 );
                             }
@@ -1631,27 +1627,27 @@
 
             onConnected: function () {
                 this.localStorage = new Backbone.LocalStorage(
-                    hex_sha1('converse.chatboxes-'+converse.bare_jid));
+                    'converse.chatboxes-'+converse.bare_jid);
                 if (!this.get('controlbox')) {
                     this.add({
                         id: 'controlbox',
                         box_id: 'controlbox'
                     });
                 } else {
-                    this.get('controlbox').save();
+                    //this.get('controlbox').save();
                 }
                 // This will make sure the Roster is set up
                 this.get('controlbox').set({connected:true});
                 // Get cached chatboxes from localstorage
-                this.fetch({
-                    add: true,
-                    success: $.proxy(function (collection, resp) {
-                        if (_.include(_.pluck(resp, 'id'), 'controlbox')) {
-                            // If the controlbox was saved in localstorage, it must be visible
-                            this.get('controlbox').set({visible:true}).save();
-                        }
-                    }, this)
-                });
+                // this.fetch({
+                //     add: true,
+                //     success: $.proxy(function (collection, resp) {
+                //         if (_.include(_.pluck(resp, 'id'), 'controlbox')) {
+                //             // If the controlbox was saved in localstorage, it must be visible
+                //             //this.get('controlbox').set({visible:true}).save();
+                //         }
+                //     }, this)
+                // });
             },
 
             createChatBox: function (attrs) {
@@ -1659,7 +1655,7 @@
                 if (chatbox) {
                     chatbox.trigger('show');
                 } else {
-                    chatbox = this.create(attrs);
+                    chatbox = this.add(attrs);
                 }
                 return chatbox;
             },
@@ -1690,14 +1686,14 @@
                 chatbox = this.get(partner_jid);
                 roster_item = converse.roster.get(partner_jid);
                 if (!chatbox) {
-                    chatbox = this.create({
+                    chatbox = this.add(new converse.ChatBox({
                         'id': partner_jid,
                         'jid': partner_jid,
                         'fullname': roster_item.get('fullname') || jid,
                         'image_type': roster_item.get('image_type'),
                         'image': roster_item.get('image'),
                         'url': roster_item.get('url')
-                    });
+                    }));
                 }
                 chatbox.messageReceived(message);
                 converse.roster.addResource(partner_jid, resource);
@@ -1806,7 +1802,7 @@
                 this.model.destroy();
             },
 
-            template: _.template('<img  src="{{user_avatar_path}}" width="10px" height="10px">' +
+            template: _.template(//'<img  src="{{user_avatar_path}}" width="10px" height="10px">' +
                                  '<a class="open-chat" title="'+__('Click to chat with this contact')+'" href="#">{{ fullname }}</a>'),
             //显示用户头像
             //'<a style="padding:0,margin:0" href="#"><img  src="http://tp3.sinaimg.cn/2138095754/180/5639186940/1" width="10" height="10"></a>' + 
@@ -1862,7 +1858,7 @@
                     url = $vcard.find('URL').text();
                 var rosteritem = converse.roster.get(jid);
                 if (rosteritem) {
-                    rosteritem.save({
+                    rosteritem.set({
                         'fullname': fullname || jid,
                         'image_type': img_type,
                         'image': img,
@@ -2024,22 +2020,22 @@
                     if (!model) {
                         is_last = false;
                         if (index === (items.length-1)) { is_last = true; }
-                        this.create({
+                        this.add(new converse.RosterItem({
                             jid: item.jid,
                             subscription: item.subscription,
                             ask: item.ask,
                             fullname: item.name || item.jid,
                             is_last: is_last
-                        });
+                        }));
                     } else {
                         if ((item.subscription === 'none') && (item.ask === null)) {
                             // This user is no longer in our roster
-                            model.destroy();
+                            //model.destroy();
                         } else if (model.get('subscription') !== item.subscription || model.get('ask') !== item.ask) {
                             // only modify model attributes if they are different from the
                             // ones that were already set when the rosterItem was added
                             model.set({'subscription': item.subscription, 'ask': item.ask});
-                            model.save();
+                            //model.save();
                         }
                     }
                 }, this);
@@ -2066,7 +2062,7 @@
                         // Another resource has changed it's status, we'll update ours as well.
                         // FIXME: We should ideally differentiate between converse.js using
                         // resources and other resources (i.e Pidgin etc.)
-                        converse.xmppstatus.save({'status': chat_status});
+                        converse.xmppstatus.set({'status': chat_status});
                     }
                     return true;
                 } else if (($presence.find('x').attr('xmlns') || '').indexOf(Strophe.NS.MUC) === 0) {
@@ -2074,7 +2070,7 @@
                 }
                 item = this.getItem(bare_jid);
                 if (item && (status_message.text() != item.get('status'))) {
-                    item.save({'status': status_message.text()});
+                    item.set({'status': status_message.text()});
                 }
                 if ((presence_type === 'subscribed') || (presence_type === 'unsubscribe')) {
                     return true;
@@ -2175,7 +2171,7 @@
                 if (_.has(item.changed, 'status')) {
                     changes.status = item.get('status');
                 }
-                chatbox.save(changes);
+                chatbox.set(changes);
             },
 
             template: _.template('<dt id="xmpp-contact-requests">'+__('Contact requests')+'</dt>' +
@@ -2272,7 +2268,7 @@
                 var stat = this.get('status');
                 if (stat === undefined) {
                     stat = 'online';
-                    this.save({status: stat});
+                    this.set({status: stat});
                 }
                 this.sendPresence(stat);
             },
@@ -2305,12 +2301,12 @@
 
             setStatus: function (value) {
                 this.sendPresence(value);
-                this.save({'status': value});
+                this.set({'status': value});
             },
 
             setStatusMessage: function (status_message) {
                 converse.connection.send($pres().c('show').t(this.get('status')).up().c('status').t(status_message));
-                this.save({'status_message': status_message});
+                this.set({'status_message': status_message});
             }
         });
 
@@ -2452,7 +2448,7 @@
             model: converse.Feature,
             initialize: function () {
                 this.localStorage = new Backbone.LocalStorage(
-                    hex_sha1('converse.features'+converse.bare_jid));
+                    'converse.features'+converse.bare_jid);
                 if (this.localStorage.records.length === 0) {
                     // localStorage is empty, so we've likely never queried this
                     // domain for features yet
@@ -2480,10 +2476,10 @@
                     return;
                 }
                 $stanza.find('feature').each($.proxy(function (idx, feature) {
-                    this.create({
+                    this.add(new converse.Feature({
                         'var': $(feature).attr('var'),
                         'from': $stanza.attr('from')
-                    });
+                    }));
                 }, this));
             }
         });
@@ -2601,7 +2597,7 @@
                     visible: true
                 });
                 if (this.connection) {
-                    this.chatboxes.get('controlbox').save();
+                    //this.chatboxes.get('controlbox').save();
                 }
             } else {
                 controlbox.trigger('show');
@@ -2611,11 +2607,7 @@
         this.toggleControlBox = function () {
             if ($("div#controlbox").is(':visible')) {
                 var controlbox = this.chatboxes.get('controlbox');
-                if (this.connection) {
-                    controlbox.destroy();
-                } else {
-                    controlbox.trigger('hide');
-                }
+                controlbox.trigger('hide');
             } else {
                 this.showControlBox();
             }
@@ -2642,12 +2634,15 @@
 
             // Set up the roster
             this.roster = new this.RosterItems();
-            this.roster.localStorage = new Backbone.LocalStorage(
-                hex_sha1('converse.rosteritems-'+this.bare_jid));
+            // this.roster.localStorage = new Backbone.LocalStorage(
+            //     'converse.rosteritems-'+this.bare_jid);
             this.connection.roster.registerCallback(
                 $.proxy(this.roster.rosterHandler, this.roster),
                 null, 'presence', null);
             this.rosterview = new this.RosterView({'model':this.roster});
+
+            this.chatboxes = new this.ChatBoxes();
+            this.chatboxesview = new this.ChatBoxesView({model: this.chatboxes});
 
             this.chatboxes.onConnected();
 
@@ -2675,6 +2670,7 @@
                 this.windowState = e.type;
             },this));
             this.giveFeedback(__('Online Contacts'));
+            this.showControlBox();
         };
 
         this.setCookie = function(c_name, value, expiredays) {
@@ -2697,26 +2693,55 @@
             return "" 
         };
 
-       $('.toggle-online-users').bind(
+        $('.toggle-online-users').bind(
             'click',
             $.proxy(function (e) {
                 e.preventDefault(); this.toggleControlBox();
             }, this)
         );
         
-        if(this.getCookie('rid')) {
-            // This is the end of the initialize method.
-            this.chatboxes = new this.ChatBoxes();
-            this.chatboxesview = new this.ChatBoxesView({model: this.chatboxes});
-            var connection = new Strophe.Connection(converse.bosh_service_url);
-            connection.attach(this.getCookie('jid'), this.getCookie('sid'), parseInt(this.getCookie('rid'),10) - 3,function (status) {
-                if ((status === Strophe.Status.ATTACHED) || (status === Strophe.Status.CONNECTED)) {
-                    converse.onConnected(connection)
-                }
-            }); 
-            //默认显示ControlBox 2013/6/21 mayl l.luffy.river@gmail.com
-            this.showControlBox();
-        }
+        connection = new Strophe.Connection(converse.bosh_service_url);
+        connection.connect('lix@192.168.1.120', 'lix', $.proxy(function (status, message) {
+            if (status === Strophe.Status.CONNECTED) {
+                console.log(__('Connected'));
+                converse.onConnected(connection);
+            } else if (status === Strophe.Status.DISCONNECTED) {
+                if ($button) { $button.show().siblings('img').remove(); }
+                converse.giveFeedback(__('Disconnected'), 'error');
+                this.connect(null, connection.jid, connection.pass);
+            } else if (status === Strophe.Status.Error) {
+                if ($button) { $button.show().siblings('img').remove(); }
+                converse.giveFeedback(__('Error'), 'error');
+            } else if (status === Strophe.Status.CONNECTING) {
+                converse.giveFeedback(__('Connecting'));
+            } else if (status === Strophe.Status.CONNFAIL) {
+                if ($button) { $button.show().siblings('img').remove(); }
+                converse.giveFeedback(__('Connection Failed'), 'error');
+            } else if (status === Strophe.Status.AUTHENTICATING) {
+                converse.giveFeedback(__('Authenticating'));
+            } else if (status === Strophe.Status.AUTHFAIL) {
+                if ($button) { $button.show().siblings('img').remove(); }
+                converse.giveFeedback(__('Authentication Failed'), 'error');
+            } else if (status === Strophe.Status.DISCONNECTING) {
+                converse.giveFeedback(__('Disconnecting'), 'error');
+            } else if (status === Strophe.Status.ATTACHED) {
+                console.log(__('Attached'));
+            }
+        }, this));
+
+        // if(this.getCookie('rid')) {
+        //     // This is the end of the initialize method.
+        //     this.chatboxes = new this.ChatBoxes();
+        //     this.chatboxesview = new this.ChatBoxesView({model: this.chatboxes});
+        //     var connection = new Strophe.Connection(converse.bosh_service_url);
+        //     connection.attach(this.getCookie('jid'), this.getCookie('sid'), parseInt(this.getCookie('rid'),10) - 3,function (status) {
+        //         if ((status === Strophe.Status.ATTACHED) || (status === Strophe.Status.CONNECTED)) {
+        //             converse.onConnected(connection)
+        //         }
+        //     }); 
+        //     //默认显示ControlBox 2013/6/21 mayl l.luffy.river@gmail.com
+        //     this.showControlBox();
+        // }
 
         
         
