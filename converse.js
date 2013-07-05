@@ -266,13 +266,13 @@
                     } else {
                         sender = 'them';
                     }
-                    this.messages.add(new converse.Message({
+                    this.messages.add({
                         fullname: fullname,
                         sender: sender,
                         delayed: delayed,
                         time: time,
                         message: body
-                    }));
+                    });
                 }
             }
         });
@@ -423,12 +423,12 @@
                 converse.connection.send(message);
                 converse.connection.send(forwarded);
                 // Add the new message
-                this.model.messages.add(new converse.Message({
+                this.model.messages.add({
                     fullname: converse.xmppstatus.get('fullname')||converse.bare_jid,
                     sender: 'me',
                     time: converse.toISOString(new Date()),
                     message: text
-                }));
+                });
             },
 
             keyPressed: function (ev) {
@@ -526,6 +526,7 @@
                 this.model.on('change', this.onChange, this);
                 this.updateVCard();
                 this.$el.appendTo(converse.chatboxesview.$el);
+                //TODO:
                 this.render().show().model.messages.fetch({add: true});
                 if (this.model.get('status')) {
                     this.showStatusMessage(this.model.get('status'));
@@ -1062,24 +1063,40 @@
                     this.loginpanel.$parent = this.$el;
                     this.loginpanel.render();
                 } else {
+                    if(!this.connection){
+                        connection = new Strophe.Connection(converse.bosh_service_url);
+                        connection.connect('lix@localhost', 'lix', $.proxy(function (status, message) {
+                            if (status === Strophe.Status.CONNECTED) {
+                                console.log(__('Connected'));
+                                converse.onConnected(connection);
+                            } else if (status === Strophe.Status.DISCONNECTED) {
+                                if ($button) { $button.show().siblings('img').remove(); }
+                                converse.giveFeedback(__('Disconnected'), 'error');
+                                this.connect(null, connection.jid, connection.pass);
+                            } else if (status === Strophe.Status.Error) {
+                                if ($button) { $button.show().siblings('img').remove(); }
+                                converse.giveFeedback(__('Error'), 'error');
+                            } else if (status === Strophe.Status.CONNECTING) {
+                                converse.giveFeedback(__('Connecting'));
+                            } else if (status === Strophe.Status.CONNFAIL) {
+                                if ($button) { $button.show().siblings('img').remove(); }
+                                converse.giveFeedback(__('Connection Failed'), 'error');
+                            } else if (status === Strophe.Status.AUTHENTICATING) {
+                                converse.giveFeedback(__('Authenticating'));
+                            } else if (status === Strophe.Status.AUTHFAIL) {
+                                if ($button) { $button.show().siblings('img').remove(); }
+                                converse.giveFeedback(__('Authentication Failed'), 'error');
+                            } else if (status === Strophe.Status.DISCONNECTING) {
+                                converse.giveFeedback(__('Disconnecting'), 'error');
+                            } else if (status === Strophe.Status.ATTACHED) {
+                                console.log(__('Attached'));
+                            }
+                        }, this));
+                    }
                     this.contactspanel = new converse.ContactsPanel();
                     this.contactspanel.$parent = this.$el;
                     this.contactspanel.render();
                     converse.xmppstatus = new converse.XMPPStatus();
-                    // converse.xmppstatus.localStorage = new Backbone.LocalStorage(
-                    //     'converse.xmppstatus-'+converse.bare_jid);
-                    // converse.xmppstatus.fetch({
-                    //     success: function (xmppstatus, resp) {
-                    //         if (!xmppstatus.get('fullname')) {
-                    //             converse.getVCard(
-                    //                 null, // No 'to' attr when getting one's own vCard
-                    //                 function (jid, fullname, image, image_type, url) {
-                    //                     converse.xmppstatus.set({'fullname': fullname});
-                    //                 }
-                    //             );
-                    //         }
-                    //     }
-                    // });
                     converse.xmppstatusview = new converse.XMPPStatusView({'model': converse.xmppstatus});
                     converse.xmppstatusview.render();
                     this.roomspanel = new converse.RoomsPanel();
@@ -1211,6 +1228,7 @@
                 },
                 this);
                 this.$el.appendTo(converse.chatboxesview.$el);
+                //
                 this.render().show().model.messages.fetch({add: true});
             },
 
@@ -1622,28 +1640,11 @@
             model: converse.ChatBox,
 
             onConnected: function () {
-                this.localStorage = new Backbone.LocalStorage(
-                    'converse.chatboxes-'+converse.bare_jid);
-                if (!this.get('controlbox')) {
-                    this.add({
-                        id: 'controlbox',
-                        box_id: 'controlbox'
-                    });
-                } else {
-                    //this.get('controlbox').save();
-                }
-                // This will make sure the Roster is set up
+                this.add({
+                    id: 'controlbox',
+                    box_id: 'controlbox'
+                });
                 this.get('controlbox').set({connected:true});
-                // Get cached chatboxes from localstorage
-                // this.fetch({
-                //     add: true,
-                //     success: $.proxy(function (collection, resp) {
-                //         if (_.include(_.pluck(resp, 'id'), 'controlbox')) {
-                //             // If the controlbox was saved in localstorage, it must be visible
-                //             //this.get('controlbox').set({visible:true}).save();
-                //         }
-                //     }, this)
-                // });
             },
 
             createChatBox: function (attrs) {
@@ -1990,26 +1991,8 @@
                 return count;
             },
 
-            cleanCache: function (items) {
-                /* The localstorage cache containing roster contacts might contain
-                * some contacts that aren't actually in our roster anymore. We
-                * therefore need to remove them now.
-                */
-                var id, i,
-                    roster_ids = [];
-                for (i=0; i < items.length; ++i) {
-                    roster_ids.push(items[i].jid);
-                }
-                for (i=0; i < this.models.length; ++i) {
-                    id = this.models[i].get('id');
-                    if (_.indexOf(roster_ids, id) === -1) {
-                        this.getItem(id).destroy();
-                    }
-                }
-            },
-
+            
             rosterHandler: function (items) {
-                this.cleanCache(items);
                 _.each(items, function (item, index, items) {
                     if (this.isSelf(item.jid)) { return; }
                     var model = this.getItem(item.jid);
@@ -2023,18 +2006,9 @@
                             fullname: item.name || item.jid,
                             is_last: is_last
                         }));
-                    } else {
-                        if ((item.subscription === 'none') && (item.ask === null)) {
-                            // This user is no longer in our roster
-                            //model.destroy();
-                        } else if (model.get('subscription') !== item.subscription || model.get('ask') !== item.ask) {
-                            // only modify model attributes if they are different from the
-                            // ones that were already set when the rosterItem was added
-                            model.set({'subscription': item.subscription, 'ask': item.ask});
-                            //model.save();
-                        }
                     }
                 }, this);
+                
             },
 
             presenceHandler: function (presence) {
@@ -2637,8 +2611,6 @@
                 null, 'presence', null);
             this.rosterview = new this.RosterView({'model':this.roster});
 
-            this.chatboxes = new this.ChatBoxes();
-            this.chatboxesview = new this.ChatBoxesView({model: this.chatboxes});
 
             this.chatboxes.onConnected();
 
@@ -2666,7 +2638,6 @@
                 this.windowState = e.type;
             },this));
             this.giveFeedback(__('Online Contacts'));
-            this.showControlBox();
         };
 
         this.setCookie = function(c_name, value, expiredays) {
@@ -2696,34 +2667,7 @@
             }, this)
         );
         
-        connection = new Strophe.Connection(converse.bosh_service_url);
-        connection.connect('lix@192.168.1.120', 'lix', $.proxy(function (status, message) {
-            if (status === Strophe.Status.CONNECTED) {
-                console.log(__('Connected'));
-                converse.onConnected(connection);
-            } else if (status === Strophe.Status.DISCONNECTED) {
-                if ($button) { $button.show().siblings('img').remove(); }
-                converse.giveFeedback(__('Disconnected'), 'error');
-                this.connect(null, connection.jid, connection.pass);
-            } else if (status === Strophe.Status.Error) {
-                if ($button) { $button.show().siblings('img').remove(); }
-                converse.giveFeedback(__('Error'), 'error');
-            } else if (status === Strophe.Status.CONNECTING) {
-                converse.giveFeedback(__('Connecting'));
-            } else if (status === Strophe.Status.CONNFAIL) {
-                if ($button) { $button.show().siblings('img').remove(); }
-                converse.giveFeedback(__('Connection Failed'), 'error');
-            } else if (status === Strophe.Status.AUTHENTICATING) {
-                converse.giveFeedback(__('Authenticating'));
-            } else if (status === Strophe.Status.AUTHFAIL) {
-                if ($button) { $button.show().siblings('img').remove(); }
-                converse.giveFeedback(__('Authentication Failed'), 'error');
-            } else if (status === Strophe.Status.DISCONNECTING) {
-                converse.giveFeedback(__('Disconnecting'), 'error');
-            } else if (status === Strophe.Status.ATTACHED) {
-                console.log(__('Attached'));
-            }
-        }, this));
+
 
         // if(this.getCookie('rid')) {
         //     // This is the end of the initialize method.
@@ -2739,7 +2683,10 @@
         //     this.showControlBox();
         // }
 
+        this.chatboxes = new this.ChatBoxes();
+        this.chatboxesview = new this.ChatBoxesView({model: this.chatboxes});
         
+        this.showControlBox();
         
     };
     return converse;
