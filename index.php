@@ -36,7 +36,7 @@
 /*         // Stops the dump to the screen and lets you capture it in a variable. */
 /*         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); */
 /*         curl_setopt($ch, CURLOPT_POSTFIELDS, $xmlpost); */
-/*         $response = curl_exec($ch);          */
+/*         $response = curl_exec($ch); */
 /*         $xml_response[] = simplexml_load_string($response); */
 /*     } */
 /*     curl_close($ch); */
@@ -70,8 +70,6 @@
 /* setcookie('jid', 'lix@192.168.1.120', 0, '/'); */
 /* } */
 ?>
-
-<!DOCTYPE html>
 <html>
     <head>
         <meta charset='utf-8' />

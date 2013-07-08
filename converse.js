@@ -190,7 +190,7 @@
             converse.connection.sendIQ(iq,
                         callback,
                         function () {
-                            console.log('Error while retrieving collections');
+                            //console.log('Error while retrieving collections');
                         });
         };
 
@@ -553,7 +553,7 @@
                             });
                         }, this),
                         $.proxy(function (stanza) {
-                            console.log("ChatBoxView.initialize: An error occured while fetching vcard");
+                            //console.log("ChatBoxView.initialize: An error occured while fetching vcard");
                         }, this)
                     );
                 }
@@ -765,7 +765,7 @@
                         this.addContact(jid, fullname);
                     }, this),
                     $.proxy(function (stanza) {
-                        console.log("An error occured while fetching vcard");
+                        //console.log("An error occured while fetching vcard");
                         if ($(stanza).find('error').attr('code') == '503') {
                             // If we get service-unavailable, we continue to create
                             // the user
@@ -2172,7 +2172,7 @@
                                     });
                                 }, this),
                                 $.proxy(function (jid, fullname, img, img_type, url) {
-                                    console.log("Error while retrieving vcard");
+                                    //console.log("Error while retrieving vcard");
                                     this.add({jid: bare_jid, subscription: 'none', ask: 'request', fullname: jid, is_last: true});
                                 }, this)
                             );
@@ -2584,7 +2584,8 @@
                 connection = new Strophe.Connection(converse.bosh_service_url);
                 connection.connect(jid, password, $.proxy(function (status, message) {
                     if (status === Strophe.Status.CONNECTED) {
-                        console.log(__('Connected'));
+                        //console.log(__('Connected'));
+                        converse.giveFeedback(__('连接成功'));
                         converse.onConnected(connection);
                     } else if (status === Strophe.Status.DISCONNECTED) {
                         if ($button) { $button.show().siblings('img').remove(); }
@@ -2606,7 +2607,7 @@
                     } else if (status === Strophe.Status.DISCONNECTING) {
                         converse.giveFeedback(__('正在断开连接...'), 'error');
                     } else if (status === Strophe.Status.ATTACHED) {
-                        console.log(__('Attached'));
+                        //console.log(__('Attached'));
                     }
                 }, this));
             },
@@ -2698,8 +2699,8 @@
 
         this.onConnected = function (connection) {
             this.connection = connection;
-            this.connection.xmlInput = function (body) { console.log(body); };
-            this.connection.xmlOutput = function (body) { console.log(body); };
+            //this.connection.xmlInput = function (body) { console.log(body); };
+            //this.connection.xmlOutput = function (body) { console.log(body); };
             this.bare_jid = Strophe.getBareJidFromJid(this.connection.jid);
             this.domain = Strophe.getDomainFromJid(this.connection.jid);
             this.features = new this.Features();
