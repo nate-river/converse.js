@@ -1064,6 +1064,10 @@
                 }
             },
 
+            closeChat: function () {
+                $('#controlbox').hide();
+            },
+
             featureAdded: function (feature) {
                 if (feature.get('var') == 'http://jabber.org/protocol/muc') {
                     this.roomspanel.muc_domain = feature.get('from');
