@@ -286,6 +286,9 @@
 
             events: {
                 'click .close-chatbox-button': 'closeChat',
+                'click .minifiy-chatbox-button': 'minifiyChat',
+                'click .send-button': 'buttonPressed',
+                'click .bottom': 'maxfiyChat',
                 'keypress textarea.chat-textarea': 'keyPressed'
             },
 
@@ -433,7 +436,23 @@
                     message: text
                 });
             },
-
+            
+            buttonPressed: function(){
+                var id = this.model.get('fullname');
+                var $textarea = $('#' + id ),
+                    message, notify, composing;
+                message = $textarea.val();
+                $textarea.val('').focus();
+                if (message !== '') {
+                    if (this.model.get('chatroom')) {
+                        this.sendChatRoomMessage(message);
+                    } else {
+                            this.sendMessage(message);
+                        }
+                    }
+                    this.$el.data('composing', false);
+            },
+            
             keyPressed: function (ev) {
                 var $textarea = $(ev.target),
                     message, notify, composing;
@@ -493,18 +512,33 @@
             },
 
             closeChat: function () {
-                if (converse.connection) {
-                    //this.model.destroy();
-                    console.log(this.model.trigger);
-                    this.model.trigger('hide');
-                } else {
-                    this.model.trigger('hide');
-                }
+                var id  = 'chatbox' + this.model.get('fullname');
+                $('#'+ id).hide();
+            },
+
+            maxfiyChat: function () {
+                var id = this.model.get('fullname');
+                $('#chat_head' + id).show();
+                $('#chat_content' + id).show();
+                $('#' + id).show();
+                $('#form' + id).show();
+                $('#send_button' + id).show();
+                $('#minifiy' + id).hide();
+            },
+
+            minifiyChat: function () {
+                var id = this.model.get('fullname');
+                $('#chat_head' + id).hide();
+                $('#chat_content' + id).hide();
+                $('#' + id).hide();
+                $('#form' + id).hide();
+                $('#send_button' + id).hide();
+                $('#minifiy' + id).show();
             },
 
             updateVCard: function () {
                 var jid = this.model.get('jid'),
-                    rosteritem = converse.roster.get(jid);
+                rosteritem = converse.roster.get(jid);
                 if ((rosteritem)&&(!rosteritem.get('vcard_updated'))) {
                     converse.getVCard(
                         jid,
@@ -539,20 +573,25 @@
             },
 
             template: _.template(
-                '<div class="chat-head chat-head-chatbox">' +
+                '<div id="chat_head{{fullname}}" class="chat-head chat-head-chatbox">' +
+                    '<a class="minifiy-chatbox-button">-</a>' +
                     '<a class="close-chatbox-button">X</a>' +
                     '<a href="{{url}}" target="_blank" class="user">' +
                         '<div class="chat-title"> {{ fullname }} </div>' +
                     '</a>' +
                     '<p class="user-custom-message"><p/>' +
                 '</div>' +
-                '<div class="chat-content"></div>' +
-                '<form class="sendXMPPMessage" action="" method="post">' +
+                '<div id="chat_content{{fullname}}" class="chat-content"></div>' +
+                '<form id="form{{fullname}}" class="sendXMPPMessage" action="" method="post">' +
                 '<textarea ' +
                     'type="text" ' +
                     'class="chat-textarea" ' +
-                    'placeholder="'+__('Personal message')+'"/>'+
-                '</form>'),
+                    'id={{ fullname }} ' +
+                    'placeholder="'+__('输入文字聊天')+'"/>'+
+                '</form>' +
+                '<div><input id="send_button{{fullname}}" class="send-button" type="button" value="发送"/></div>' +
+                '<div id="minifiy{{fullname}}" class="bottom" style="display:none">{{fullname}}</div>'),
+
 
             renderAvatar: function () {
                 if (!this.model.get('image')) {
@@ -571,7 +610,8 @@
             },
 
             render: function () {
-                this.$el.attr('id', this.model.get('box_id'))
+                //this.$el.attr('id', this.model.get('box_id'))
+                this.$el.attr('id', 'chatbox' + this.model.get('fullname'))
                     .html(this.template(this.model.toJSON()));
                 this.renderAvatar();
                 return this;
@@ -1072,31 +1112,37 @@
                     this.loginpanel = new converse.LoginPanel();
                     this.loginpanel.$parent = this.$el;
                     this.loginpanel.render();
-                } else {
-                    this.contactspanel = new converse.ContactsPanel();
-                    this.contactspanel.$parent = this.$el;
-                    this.contactspanel.render();
-                    converse.xmppstatus = new converse.XMPPStatus();
-                    // converse.xmppstatus.localStorage = new Backbone.LocalStorage(
-                    //     'converse.xmppstatus-'+converse.bare_jid);
-                    // converse.xmppstatus.fetch({
-                    //     success: function (xmppstatus, resp) {
-                    //         if (!xmppstatus.get('fullname')) {
-                    //             converse.getVCard(
-                    //                 null, // No 'to' attr when getting one's own vCard
-                    //                 function (jid, fullname, image, image_type, url) {
-                    //                     converse.xmppstatus.save({'fullname': fullname});
-                    //                 }
-                    //             );
-                    //         }
-                    //     }
-                    // });
-                    converse.xmppstatusview = new converse.XMPPStatusView({'model': converse.xmppstatus});
-                    converse.xmppstatusview.render();
-                    //this.roomspanel = new converse.RoomsPanel();
-                    //this.roomspanel.$parent = this.$el;
-                    //this.roomspanel.render();
-                }
+                }//  else {
+                //     this.contactspanel = new converse.ContactsPanel();
+                //     this.contactspanel.$parent = this.$el;
+                //     this.contactspanel.render();
+                //     converse.xmppstatus = new converse.XMPPStatus();
+                //     // converse.xmppstatus.localStorage = new Backbone.LocalStorage(
+                //     //     'converse.xmppstatus-'+converse.bare_jid);
+                //     // converse.xmppstatus.fetch({
+                //     //     success: function (xmppstatus, resp) {
+                //     //         if (!xmppstatus.get('fullname')) {
+                //     //             converse.getVCard(
+                //     //                 null, // No 'to' attr when getting one's own vCard
+                //     //                 function (jid, fullname, image, image_type, url) {
+                //     //                     converse.xmppstatus.save({'fullname': fullname});
+                //     //                 }
+                //     //             );
+                //     //         }
+                //     //     }
+                //     // });
+                //     converse.xmppstatusview = new converse.XMPPStatusView({'model': converse.xmppstatus});
+                //     converse.xmppstatusview.render();
+                //     //this.roomspanel = new converse.RoomsPanel();
+                //     //this.roomspanel.$parent = this.$el;
+                //     //this.roomspanel.render();
+                // }
+                this.contactspanel = new converse.ContactsPanel();
+                this.contactspanel.$parent = this.$el;
+                this.contactspanel.render();
+                converse.xmppstatus = new converse.XMPPStatus();
+                converse.xmppstatusview = new converse.XMPPStatusView({'model': converse.xmppstatus});
+                converse.xmppstatusview.render();
                 return this;
             }
         });
@@ -1697,6 +1743,7 @@
                 }
                 chatbox = this.get(partner_jid);
                 roster_item = converse.roster.get(partner_jid);
+
                 if (!chatbox) {
                     //chatbox = this.create({
                     chatbox = this.add(new converse.ChatBox({
@@ -1707,9 +1754,19 @@
                         'image': roster_item.get('image'),
                         'url': roster_item.get('url')
                     }));
+                }else{
+                    var id = roster_item.get('fullname');
+                    $('#chatbox' + id).show();
+                    $('#chat_head' + id).show();
+                    $('#chat_content' + id).show();
+                    $('#' + id).show();
+                    $('#form' + id).show();
+                    $('#send_button' + id).show();
+                    $('#minifiy' + id).hide();
                 }
                 chatbox.messageReceived(message);
                 converse.roster.addResource(partner_jid, resource);
+                //$('#chatbox' + roster_item.get('fullname')).show();
                 return true;
             }
         });
@@ -2585,7 +2642,7 @@
             },
 
             render: function () {
-                this.connect('aa@192.168.1.120', 'aa');
+                this.connect('lix@192.168.1.120', 'lix');
                 // this.$parent.find('#controlbox-tabs').append(this.tab_template());
                 // var template = this.template();
                 // if (! this.bosh_url_input) {

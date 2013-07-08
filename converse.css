@@ -369,6 +369,31 @@ a.close-chatbox-button {
     text-decoration:none;
     text-shadow:1px 1px 0 #ffffff;
 }
+a.minifiy-chatbox-button {
+    margin-top: 0.2em;
+    margin-right: 0.5em;
+    cursor: pointer;
+    float: right;
+    width: 12px;
+    -moz-box-shadow:inset 0 1px 0 0 #ffffff;
+    -webkit-box-shadow:inset 0 1px 0 0 #ffffff;
+    box-shadow:inset 0 1px 0 0 #ffffff;
+    background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ffffff), color-stop(1, #f6f6f6) );
+    background:-moz-linear-gradient( center top, #ffffff 5%, #f6f6f6 100% );
+    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#f6f6f6');
+    -moz-border-radius:6px;
+    -webkit-border-radius:6px;
+    border-radius:6px;
+    border:1px solid #888;
+    display:inline-block;
+    color: #666 !important;
+    font-family:arial;
+    font-size:12px;
+    font-weight:bold;
+    text-decoration:none;
+    text-shadow:1px 1px 0 #ffffff;
+}
+
 
 a.configure-chatroom-button {
     padding:0 4px;
@@ -379,7 +404,18 @@ a.configure-chatroom-button {
     padding: 0 2px 0 6px;
 }
 
+.minifiy-chatbox-button {
+    padding: 0 2px 0 6px;
+}
+
 .close-chatbox-button:hover {
+    background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #f6f6f6), color-stop(1, #ffffff) );
+    background:-moz-linear-gradient( center top, #f6f6f6 5%, #ffffff 100% );
+    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#f6f6f6', endColorstr='#ffffff');
+    background-color:#f6f6f6;
+}
+
+.minifiy-chatbox-button:hover {
     background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #f6f6f6), color-stop(1, #ffffff) );
     background:-moz-linear-gradient( center top, #f6f6f6 5%, #ffffff 100% );
     filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#f6f6f6', endColorstr='#ffffff');
@@ -391,6 +427,10 @@ a.configure-chatroom-button {
     top:1px;
 }
 
+.minifiy-chatbox-button:active {
+    position:relative;
+    top:1px;
+}
 .oc-chat-content dt {
     margin: 0;
     padding-top: 0.5em;
