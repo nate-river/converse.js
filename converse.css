@@ -43,7 +43,6 @@ img.centered {
     position: fixed;
     bottom: 0; right: 0;
     height: 332px;
-    width: auto;
 }
 
 #toggle-controlbox {
@@ -51,14 +50,13 @@ img.centered {
     font-size: 80%;
     bottom: 0;
     right: 0;
-    border-top-right-radius: 4px;
-    border-top-left-radius: 4px;
     background: #e3e2e2;
-    border: 1px solid #c3c3c3;
-    border-bottom: none;
-    padding: 0.25em 0.5em;
-    margin-right: 1em;
-    height: 1.1em;
+    border:1px solid #c3c3c3;
+    padding: 0.25em 0;
+    height: 25px;
+	line-height:25px;
+	width:178px;
+	text-align:center
 }
 
 #connecting-to-chat {
@@ -445,7 +443,16 @@ a.configure-chatroom-button {
     clear: both;
 }
 
-#converse-roster dd.current-xmpp-contact,
+#converse-roster dd .usr-img{width:30px;height:30px;float:left;position:relative}
+#converse-roster dd.current-xmpp-contact .usr-status{display:block;z-index:2;width:9px;height:10px;background:url(images/status.png) no-repeat;position:absolute;right:0;bottom:0}
+#converse-roster dd.current-xmpp-contact.offline .usr-status {
+	background-position:-8px -32px
+}
+#converse-roster dd.current-xmpp-contact.online .usr-status {
+	background-position:-8px -7px
+}
+
+/*#converse-roster dd.current-xmpp-contact,
 #converse-roster dd.current-xmpp-contact:hover {
     background: url(images/user_online_panel.png) no-repeat 5px 2px;
 }
@@ -468,6 +475,13 @@ a.configure-chatroom-button {
 #converse-roster dd.current-xmpp-contact.away:hover {
     background: url(images/user_away_panel.png) no-repeat 5px 2px;
 }
+
+#converse-roster dd.current-xmpp-contact.online:hover, 
+#converse-roster dd.current-xmpp-contact.away:hover, 
+#converse-roster dd.current-xmpp-contact.offline:hover, 
+#converse-roster dd.current-xmpp-contact.busy:hover {
+    background: #F5F5F5
+}*/
 
 #converse-roster dd.requesting-xmpp-contact button{
     margin-left: 0.5em;
@@ -530,12 +544,23 @@ a.configure-chatroom-button {
 
 dd.available-chatroom,
 #converse-roster dd {
+	position:relative;
     font-weight: bold;
     border: none;
     display: block;
     padding: 0 0em 0 0.5em;
     color: #666;
     text-shadow: 0 1px 0 rgba(250, 250, 250, 1);
+	padding: 6px 10px;
+	cursor: pointer;
+	height: 30px;
+	line-height:30px;
+	overflow: hidden
+}
+
+dd.available-chatroom,
+#converse-roster dd:hover {
+	background: #F5F5F5
 }
 
 .room-info {
@@ -597,7 +622,7 @@ dd.available-chatroom:hover a.open-room {
 }
 
 #converse-roster  dd:hover a.open-chat {
-    width: 75%;
+  
 }
 
 .chatbox,
@@ -605,13 +630,12 @@ dd.available-chatroom:hover a.open-room {
     box-shadow: 1px 1px 5px 1px rgba(0,0,0,0.4);
     display:none;
     float: right;
-    margin-right: 15px;
     z-index: 20; /* So that it's higher than the content actions */
     border-radius: 4px;
 }
 
 .chatbox {
-    width: 201px;
+    width: 180px;
 }
 
 .chatroom {
@@ -623,8 +647,6 @@ dd.available-chatroom:hover a.open-room {
     height:272px;
     width: 199px;
     padding: 0;
-    border-bottom-right-radius: 4px;
-    border-bottom-left-radius: 4px;
 }
 
 .oc-chat-content dd {
@@ -645,10 +667,8 @@ div#controlbox-panes {
     background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%,rgba(240,240,240,1) 100%); /* Chrome10+,Safari5.1+ */
     background: linear-gradient(top, rgba(255,255,255,1) 0%,rgba(240,240,240,1) 100%); /* W3C */
     background-color: white;
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 4px;
     border: 1px solid #999;
-    width: 199px;
+    width: 180px;
 }
 
 
@@ -748,10 +768,10 @@ div#login-dialog,
 div#settings {
     border: 0;
     font-size: 14px;
-    width: 199px;
+    width: 180px;
     background-color: white;
-    border-bottom-right-radius: 4px;
-    border-bottom-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-top-left-radius: 4px;
 }
 
 div#chatrooms {
