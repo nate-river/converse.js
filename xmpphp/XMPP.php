@@ -488,14 +488,15 @@ class XMPPHP_XMPP extends XMPPHP_XMLStream {
      * $userinfo 数组
      * 设定用户名片
      */
-    public function setVcard($userinfo){
+    //public function setVcard($userinfo){
+    public function setVcard(){
 
-        $jid = $userinfo['jid'];
+        //$jid = $userinfo['jid'];
 
         $id = $this->getID();
         $xml = "<iq id='$id' type='set'>";
         $xml .= "<vCard xmlns='vcard-temp'>";
-        $xml .= "";
+        $xml .= "    <FN>mayl</FN>    <N>      <FAMILY>Saint-Andre</FAMILY>      <GIVEN>Peter</GIVEN>      <MIDDLE/>    </N>    <NICKNAME>stpeter</NICKNAME>    <URL>http://www.xmpp.org/xsf/people/stpeter.shtml</URL>    <BDAY>1966-08-06</BDAY>    <ORG>      <ORGNAME>XMPP Standards Foundation</ORGNAME>      <ORGUNIT/>    </ORG>    <TITLE>Executive Director</TITLE>    <ROLE>Patron Saint</ROLE>    <TEL><WORK/><VOICE/><NUMBER>303-308-3282</NUMBER></TEL>    <TEL><WORK/><FAX/><NUMBER/></TEL>    <TEL><WORK/><MSG/><NUMBER/></TEL>    <ADR>      <WORK/>      <EXTADD>Suite 600</EXTADD>      <STREET>1899 Wynkoop Street</STREET>      <LOCALITY>Denver</LOCALITY>      <REGION>CO</REGION>      <PCODE>80202</PCODE>      <CTRY>USA</CTRY>    </ADR>    <TEL><HOME/><VOICE/><NUMBER>303-555-1212</NUMBER></TEL>    <TEL><HOME/><FAX/><NUMBER/></TEL>    <TEL><HOME/><MSG/><NUMBER/></TEL>    <ADR>      <HOME/>      <EXTADD/>      <STREET/>      <LOCALITY>Denver</LOCALITY>      <REGION>CO</REGION>      <PCODE>80209</PCODE>      <CTRY>USA</CTRY>    </ADR>    <EMAIL><INTERNET/><PREF/><USERID>stpeter@jabber.org</USERID></EMAIL>    <JABBERID>stpeter@jabber.org</JABBERID>    <DESC>      More information about me is located on my       personal website: http://www.saint-andre.com/    </DESC>";
         $xml .= "</vCard>";
         $xml .= "</iq>";
         //$this->addIdHandler($id, 'add_roster_contact_handler');

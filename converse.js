@@ -289,6 +289,7 @@
                 'click .minifiy-chatbox-button': 'minifiyChat',
                 'click .send-button': 'buttonPressed',
                 'click .bottom': 'maxfiyChat',
+                'input textarea.chat-textarea': 'typing',
                 'keypress textarea.chat-textarea': 'keyPressed'
             },
 
@@ -364,7 +365,7 @@
                     }
                 }
                 if (message.get('composing')) {
-                    this.insertStatusNotification(message.get('fullname')+' '+'is typing');
+                    this.insertStatusNotification(message.get('fullname')+' '+'正在输入....');
                     return;
                 } else {
                     this.appendMessage($chat_content, _.clone(message.attributes));
@@ -441,21 +442,44 @@
                 var id = this.model.get('fullname');
                 var $textarea = $('#' + id ),
                     message, notify, composing;
+
+                if($textarea.val().length > 200){
+                    alert('超过字数限制,请重新输入');
+                    return;
+                }
+
                 message = $textarea.val();
                 $textarea.val('').focus();
                 if (message !== '') {
                     if (this.model.get('chatroom')) {
                         this.sendChatRoomMessage(message);
                     } else {
-                            this.sendMessage(message);
-                        }
+                        this.sendMessage(message);
                     }
-                    this.$el.data('composing', false);
+                }
+                this.$el.data('composing', false);
             },
-            
+
+            typing: function (ev){
+                var $textarea = $(ev.target);
+                    id = this.model.get('fullname');
+                var words_left = 200 - parseInt($textarea.val().length,10);
+                if (words_left >= 0){
+                    $('#limit' + id).replaceWith('<div class = "words-limit" style="float:right" id="limit'+id+'">' + words_left + '</div> ');
+                }else{
+                    $('#limit' + id).replaceWith('<div class = "words-limit" style="float:right;color:red" id="limit'+id+'">' + words_left + '</div> ');
+                }
+            },
+
             keyPressed: function (ev) {
                 var $textarea = $(ev.target),
                     message, notify, composing;
+
+                if($textarea.val().length > 200){
+                    alert('超过字数限制,请重新输入');
+                    return;
+                }
+                
                 if(ev.keyCode == 13) {
                     ev.preventDefault();
                     message = $textarea.val();
@@ -524,6 +548,7 @@
                 $('#form' + id).show();
                 $('#send_button' + id).show();
                 $('#minifiy' + id).hide();
+                $('#minifiy' + id).removeClass('new-message');
             },
 
             minifiyChat: function () {
@@ -576,9 +601,9 @@
                 '<div id="chat_head{{fullname}}" class="chat-head chat-head-chatbox">' +
                     '<a class="minifiy-chatbox-button">-</a>' +
                     '<a class="close-chatbox-button">X</a>' +
-                    '<a href="{{url}}" target="_blank" class="user">' +
+                    //'<a href="{{url}}" target="_blank" class="user">' +
                         '<div class="chat-title"> {{ fullname }} </div>' +
-                    '</a>' +
+                    //'</a>' +
                     '<p class="user-custom-message"><p/>' +
                 '</div>' +
                 '<div id="chat_content{{fullname}}" class="chat-content"></div>' +
@@ -589,8 +614,9 @@
                     'id={{ fullname }} ' +
                     'placeholder="'+__('输入文字聊天')+'"/>'+
                 '</form>' +
-                '<div><input id="send_button{{fullname}}" class="send-button" type="button" value="发送"/></div>' +
-                '<div id="minifiy{{fullname}}" class="bottom" style="display:none">{{fullname}}</div>'),
+                '<div id="send_button{{fullname}}"><input  class="send-button" type="button" value="发送"/>' +
+                '<div class = "words-limit" style="float:right" id="limit{{fullname}}">200</div></div>' +
+                '<div id="minifiy{{fullname}}" class="bottom" style="float:left;display:none">{{fullname}}</div>'),
 
 
             renderAvatar: function () {
@@ -706,7 +732,7 @@
 
             render: function () {
                 var markup;
-                this.$parent.find('#controlbox-tabs').append(this.tab_template());
+                //this.$parent.find('#controlbox-tabs').append(this.tab_template());
                 this.$parent.find('#controlbox-panes').append(this.$el.html(this.template()));
                 if (converse.xhr_user_search) {
                     markup = this.search_contact_template();
@@ -714,7 +740,11 @@
                     markup = this.add_contact_template();
                 }
                 this.$el.find('.search-xmpp ul').append(markup);
-                this.$el.append(converse.rosterview.$el);
+
+                if(converse.connection){
+                    this.$el.append(converse.rosterview.$el);
+                }
+                
                 return this;
             },
 
@@ -1767,6 +1797,8 @@
                     $('#form' + id).show();
                     $('#send_button' + id).show();
                     $('#minifiy' + id).hide();
+                    //TODO: write the new-message css class
+                    //$('#minifiy' + id).addClass('new-message');
                 }
                 chatbox.messageReceived(message);
                 converse.roster.addResource(partner_jid, resource);
@@ -1827,7 +1859,6 @@
 
         this.RosterItemView = Backbone.View.extend({
             tagName: 'dd',
-
             events: {
                 "click .accept-xmpp-request": "acceptRequest",
                 "click .decline-xmpp-request": "declineRequest",
@@ -1846,6 +1877,14 @@
                     'url': this.model.get('url'),
                     'status': this.model.get('status')
                 });
+                var id = this.model.get('fullname');
+                $('#chat_head' + id).show();
+                $('#chat_content' + id).show();
+                $('#' + id).show();
+                $('#form' + id).show();
+                $('#send_button' + id).show();
+                $('#minifiy' + id).hide();
+                $('#' + id).val('').focus();
             },
 
             removeContact: function (ev) {
@@ -1875,8 +1914,8 @@
                 //this.model.destroy();
             },
 
-            template: _.template('<div class="usr-img open-chat"><div class="usr-status"></div><img  src="{{user_avatar_path}}"></div>' +
-                                 '<a class="open-chat" title="'+__('点击聊天')+'" href="#">{{ fullname }}</a>'),
+            template: _.template('<div class="open-chat"><div class="usr-img open-chat"><div class="usr-status"></div><img  src="{{user_avatar_path}}"></div>' +
+                                 '<a class="open-chat" title="'+__('点击聊天')+'" href="#">{{ fullname }}</a></div>'),
 
             pending_template: _.template(
                         '<span>{{ fullname }}</span>'),
@@ -2460,7 +2499,7 @@
                 var stat = model.get('status');
                 // # For translators: the %1$s part gets replaced with the status
                 // # Example, I am online
-                var status_message = '设置在线状态';//model.get('status_message');// || __("I am %1$s", this.getPrettyStatus(stat));
+                var status_message = '';//model.get('status_message');// || __("I am %1$s", this.getPrettyStatus(stat));
                 this.$el.find('#fancy-xmpp-status-select').html(
                     this.status_template({
                         'chat_status': stat,
@@ -2494,7 +2533,7 @@
                 this.$el.html(this.choose_template());
                 this.$el.find('#fancy-xmpp-status-select')
                         .html(this.status_template({
-                            'status_message': '设置在线状态',//__("I am %1$s", this.getPrettyStatus(chat_status)),
+                            'status_message': '',//__("I am %1$s", this.getPrettyStatus(chat_status)),
                             'chat_status': chat_status
                             }));
                 // iterate through all the <option> elements and add option values
@@ -2605,7 +2644,7 @@
                         if ($button) { $button.show().siblings('img').remove(); }
                         converse.giveFeedback(__('认证失败'), 'error');
                     } else if (status === Strophe.Status.DISCONNECTING) {
-                        converse.giveFeedback(__('正在断开连接...'), 'error');
+                        converse.giveFeedback(__('连接已断开'), 'error');
                     } else if (status === Strophe.Status.ATTACHED) {
                         //console.log(__('Attached'));
                     }
@@ -2647,7 +2686,8 @@
             },
 
             render: function () {
-                this.connect('lix@192.168.1.120', 'lix');
+                //this.connect('lix@192.168.1.120', 'lix');
+                this.connect('lix@localhost', 'lix');
                 // this.$parent.find('#controlbox-tabs').append(this.tab_template());
                 // var template = this.template();
                 // if (! this.bosh_url_input) {
@@ -2677,13 +2717,14 @@
 
         this.toggleControlBox = function () {
             if ($("div#controlbox").is(':visible')) {
-                var controlbox = this.chatboxes.get('controlbox');
-                if (this.connection) {
-                    //controlbox.destroy();
-                    controlbox.trigger('hide');
-                } else {
-                    controlbox.trigger('hide');
-                }
+                $("div#controlbox").hide();
+                // var controlbox = this.chatboxes.get('controlbox');
+                // if (this.connection) {
+                //     //controlbox.destroy();
+                //     controlbox.trigger('hide');
+                // } else {
+                //     controlbox.trigger('hide');
+                // }
             } else {
                 this.showControlBox();
             }
@@ -2745,7 +2786,7 @@
         // This is the end of the initialize method.
         this.chatboxes = new this.ChatBoxes();
         this.chatboxesview = new this.ChatBoxesView({model: this.chatboxes});
-        $('.toggle-online-users').bind(
+        $('#toggle-controlbox').bind(
             'click',
             $.proxy(function (e) {
                 e.preventDefault(); this.toggleControlBox();

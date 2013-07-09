@@ -10,7 +10,8 @@ Class XMPPChat {
     const ADMINUSERNAME = 'admin';
     const ADMINUSERPASSWORD = 'admin';
 
-    const XMPPHOST = '192.168.1.120';
+    //const XMPPHOST = '192.168.1.120';
+    const XMPPHOST = 'localhost';
     const PORT = '5222';
     const RESOURCE = 'xmpphp';
 
@@ -58,11 +59,13 @@ Class XMPPChat {
     }
 
     public function setUserVcard(){
-        $userinfo['jid'] = 'test@192.168.1.120';
+        //$userinfo['jid'] = 'test@192.168.1.120';
         $conn = new XMPPHP_XMPP (self::XMPPHOST, self::PORT, $this->username, $this->password, self::RESOURCE);
         $conn->connect();
         $conn->processUntil('session_start');
-        $conn->setVcard($userinfo);
+        //$conn->setVcard($userinfo);
+        echo '1';
+        $conn->setVcard();
         $conn->disconnect();
     }
 
@@ -82,5 +85,7 @@ Class XMPPChat {
         $conn->disconnect();
     }
 }
+$test  = new XMPPChat('mayl','mayl');
+$test->setUserVcard();
 
 ?>
