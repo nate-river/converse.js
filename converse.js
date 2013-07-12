@@ -11,7 +11,6 @@
        if (typeof define === 'function' && define.amd) {
         require.config({
             paths: {
-                "locales": "locale/locales",
                 "sjcl": "Libraries/sjcl",
                 "tinysort": "Libraries/jquery.tinysort",
                 "underscore": "Libraries/underscore",
@@ -45,7 +44,6 @@
         });
 
         define("converse", [
-            "locales",
             "tinysort",
             "sjcl",
             "underscore",
@@ -80,7 +78,6 @@
         this.auto_subscribe = false;
         this.bosh_service_url = ''; // The BOSH connection manager URL. Required if you are not prebinding.
         this.hide_muc_server = false;
-        this.i18n = locales.en;
         this.prebind = false;
         this.show_controlbox_by_default = false;
         this.xhr_user_search = false;
@@ -88,12 +85,7 @@
 
 
         var __ = function (str) {
-            var t = converse.i18n.translate(str);
-            if (arguments.length>1) {
-                return t.fetch.apply(t, [].slice.call(arguments,1));
-            } else {
-                return t.fetch();
-            }
+			return str;
         };
         this.msg_counter = 0;
         this.autoLink = function (text) {
@@ -225,13 +217,16 @@
                     this.messages = new converse.Messages();
                     //this.messages.localStorage = new Backbone.LocalStorage(
                     //    'converse.messages'+this.get('jid'));
+                    var dom_id = Strophe.getBareJidFromJid(this.get('jid')).split('@')[0];
                     this.set({
                         'user_id' : Strophe.getNodeFromJid(this.get('jid')),
                         'box_id' : this.get('jid'),
+                        'dom_id': dom_id, 
                         'fullname' : this.get('fullname'),
-                        'url': this.get('url'),
+                        'url': '/Usr/view/id/' + dom_id,
                         'image_type': this.get('image_type'),
-                        'image': this.get('image')
+                        'image': this.get('image'),
+						'user_avatar':'/upload/image/usr/' + dom_id + '.jpg'
                     });
                 }
             },
@@ -439,7 +434,7 @@
             },
             
             buttonPressed: function(){
-                var id = this.model.get('fullname');
+                var id = this.model.get('dom_id');
                 var $textarea = $('#' + id ),
                     message, notify, composing;
 
@@ -462,7 +457,7 @@
 
             typing: function (ev){
                 var $textarea = $(ev.target);
-                    id = this.model.get('fullname');
+                    id = this.model.get('dom_id');
                 var words_left = 200 - parseInt($textarea.val().length,10);
                 if (words_left >= 0){
                     $('#limit' + id).replaceWith('<div class = "words-limit" style="float:right" id="limit'+id+'">' + words_left + '</div> ');
@@ -526,7 +521,7 @@
                 } if (_.has(item.changed, 'status')) {
                     this.showStatusMessage(item.get('status'));
                 } if (_.has(item.changed, 'image')) {
-                    this.renderAvatar();
+                    //this.renderAvatar();
                 }
                 // TODO check for changed fullname as well
             },
@@ -536,12 +531,12 @@
             },
 
             closeChat: function () {
-                var id  = 'chatbox' + this.model.get('fullname');
+                var id  = 'chatbox' + this.model.get('dom_id');
                 $('#'+ id).hide();
             },
 
             maxfiyChat: function () {
-                var id = this.model.get('fullname');
+                var id = this.model.get('dom_id');
                 $('#chat_head' + id).show();
                 $('#chat_content' + id).show();
                 $('#' + id).show();
@@ -552,7 +547,7 @@
             },
 
             minifiyChat: function () {
-                var id = this.model.get('fullname');
+                var id = this.model.get('dom_id');
                 $('#chat_head' + id).hide();
                 $('#chat_content' + id).hide();
                 $('#' + id).hide();
@@ -598,25 +593,28 @@
             },
 
             template: _.template(
-                '<div id="chat_head{{fullname}}" class="chat-head chat-head-chatbox">' +
+                '<div id="chat_head{{dom_id}}" class="chat-head chat-head-chatbox">' +
                     '<a class="minifiy-chatbox-button">-</a>' +
                     '<a class="close-chatbox-button">X</a>' +
-                    //'<a href="{{url}}" target="_blank" class="user">' +
+                    '<a href="{{url}}" target="_blank" class="user">' +
+					'<img src="{{user_avatar}}" class="avatar">'+
+                    '</a>' +
+                    '<a href="{{url}}" target="_blank" class="user">' +
                         '<div class="chat-title"> {{ fullname }} </div>' +
-                    //'</a>' +
+                    '</a>' +
                     '<p class="user-custom-message"><p/>' +
                 '</div>' +
-                '<div id="chat_content{{fullname}}" class="chat-content"></div>' +
-                '<form id="form{{fullname}}" class="sendXMPPMessage" action="" method="post">' +
+                '<div id="chat_content{{dom_id}}" class="chat-content"></div>' +
+                '<form id="form{{dom_id}}" class="sendXMPPMessage" action="" method="post">' +
                 '<textarea ' +
                     'type="text" ' +
                     'class="chat-textarea" ' +
-                    'id={{ fullname }} ' +
+                    'id={{ dom_id }} ' +
                     'placeholder="'+__('输入文字聊天')+'"/>'+
                 '</form>' +
-                '<div id="send_button{{fullname}}"><input  class="send-button" type="button" value="发送"/>' +
-                '<div class = "words-limit" style="float:right" id="limit{{fullname}}">200</div></div>' +
-                '<div id="minifiy{{fullname}}" class="bottom" style="float:left;display:none">{{fullname}}</div>'),
+                '<div id="send_button{{dom_id}}"><input  class="send-button" type="button" value="发送"/>' +
+                '<div class = "words-limit" style="float:right" id="limit{{dom_id}}">200</div></div>' +
+                '<div id="minifiy{{dom_id}}" class="bottom" style="display:none">{{fullname}}</div>'),
 
 
             renderAvatar: function () {
@@ -637,9 +635,9 @@
 
             render: function () {
                 //this.$el.attr('id', this.model.get('box_id'))
-                this.$el.attr('id', 'chatbox' + this.model.get('fullname'))
+                this.$el.attr('id', 'chatbox' + this.model.get('dom_id'))
                     .html(this.template(this.model.toJSON()));
-                this.renderAvatar();
+                //this.renderAvatar();
                 return this;
             },
 
@@ -1492,19 +1490,19 @@
                 // # For translations: %1$s will be replaced with the user's nickname
                 // # Don't translate "strong"
                 // # Example: <strong>jcbrand</strong> has been banned
-                301: converse.i18n.translate('<strong>%1$s</strong> has been banned'),
+                //301: converse.i18n.translate('<strong>%1$s</strong> has been banned'),
                 // # For translations: %1$s will be replaced with the user's nickname
                 // # Don't translate "strong"
                 // # Example: <strong>jcbrand</strong> has been kicked out
-                307: converse.i18n.translate('<strong>%1$s</strong> has been kicked out'),
+                //307: converse.i18n.translate('<strong>%1$s</strong> has been kicked out'),
                 // # For translations: %1$s will be replaced with the user's nickname
                 // # Don't translate "strong"
                 // # Example: <strong>jcbrand</strong> has been removed because of an affiliasion change
-                321: converse.i18n.translate("<strong>%1$s</strong> has been removed because of an affiliation change"),
+                //321: converse.i18n.translate("<strong>%1$s</strong> has been removed because of an affiliation change"),
                 // # For translations: %1$s will be replaced with the user's nickname
                 // # Don't translate "strong"
                 // # Example: <strong>jcbrand</strong> has been removed for not being a member
-                322: converse.i18n.translate("<strong>%1$s</strong> has been removed for not being a member")
+                //322: converse.i18n.translate("<strong>%1$s</strong> has been removed for not being a member")
             },
 
             disconnectMessages: {
@@ -1789,7 +1787,7 @@
                         'url': roster_item.get('url')
                     }));
                 }else{
-                    var id = roster_item.get('fullname');
+                    var id = partner_jid.split('@')[0];
                     $('#chatbox' + id).show();
                     $('#chat_head' + id).show();
                     $('#chat_content' + id).show();
@@ -1844,11 +1842,12 @@
                 if (!attributes.fullname) {
                     attributes.fullname = jid;
                 }
+				var user_avatar_path = '/upload/image/usr/' + jid.split('@')[0] + '.jpg';
                 var attrs = _.extend({
                     'id': jid,
                     'user_id': Strophe.getNodeFromJid(jid),
                     'resources': [],
-					'user_avatar_path': jid + '.jpg',
+					'user_avatar_path': user_avatar_path,
                     'status': ''
                 }, attributes);
                 attrs.sorted = false;
@@ -1877,7 +1876,7 @@
                     'url': this.model.get('url'),
                     'status': this.model.get('status')
                 });
-                var id = this.model.get('fullname');
+                var id = this.model.get('jid').split('@')[0];
                 $('#chat_head' + id).show();
                 $('#chat_content' + id).show();
                 $('#' + id).show();
@@ -2618,39 +2617,7 @@
             bosh_url_input: _.template(
                 '<label>'+__('BOSH Service URL:')+'</label>' +
                 '<input type="text" id="bosh_service_url">'),
-
-            connect: function (jid, password) {
-                connection = new Strophe.Connection(converse.bosh_service_url);
-                connection.connect(jid, password, $.proxy(function (status, message) {
-                    if (status === Strophe.Status.CONNECTED) {
-                        //console.log(__('Connected'));
-                        converse.giveFeedback(__('连接成功'));
-                        converse.onConnected(connection);
-                    } else if (status === Strophe.Status.DISCONNECTED) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('已断开'), 'error');
-                        this.connect(null, connection.jid, connection.pass);
-                    } else if (status === Strophe.Status.Error) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('未知错误'), 'error');
-                    } else if (status === Strophe.Status.CONNECTING) {
-                        converse.giveFeedback(__('正在连接...'));
-                    } else if (status === Strophe.Status.CONNFAIL) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('连接失败'), 'error');
-                    } else if (status === Strophe.Status.AUTHENTICATING) {
-                        converse.giveFeedback(__('正在认证....'));
-                    } else if (status === Strophe.Status.AUTHFAIL) {
-                        if ($button) { $button.show().siblings('img').remove(); }
-                        converse.giveFeedback(__('认证失败'), 'error');
-                    } else if (status === Strophe.Status.DISCONNECTING) {
-                        converse.giveFeedback(__('连接已断开'), 'error');
-                    } else if (status === Strophe.Status.ATTACHED) {
-                        //console.log(__('Attached'));
-                    }
-                }, this));
-            },
-
+				
             authenticate: function (ev) {
                 ev.preventDefault();
                 var $form = $(ev.target),
@@ -2686,8 +2653,38 @@
             },
 
             render: function () {
-                //this.connect('lix@192.168.1.120', 'lix');
-                this.connect('lix@localhost', 'lix');
+				$.post('/Usr/xmppLogin', function(data) {
+					var d = $.parseJSON(data);
+	                connection = new Strophe.Connection(converse.bosh_service_url);
+	                connection.connect(d.jid, d.pwd, $.proxy(function (status, message) {
+	                    if (status === Strophe.Status.CONNECTED) {
+	                        //console.log(__('Connected'));
+	                        converse.giveFeedback(__('连接成功'));
+	                        converse.onConnected(connection);
+	                    } else if (status === Strophe.Status.DISCONNECTED) {
+	                        if ($button) { $button.show().siblings('img').remove(); }
+	                        converse.giveFeedback(__('已断开'), 'error');
+	                        this.connect(null, connection.jid, connection.pass);
+	                    } else if (status === Strophe.Status.Error) {
+	                        if ($button) { $button.show().siblings('img').remove(); }
+	                        converse.giveFeedback(__('未知错误'), 'error');
+	                    } else if (status === Strophe.Status.CONNECTING) {
+	                        converse.giveFeedback(__('正在连接...'));
+	                    } else if (status === Strophe.Status.CONNFAIL) {
+	                        if ($button) { $button.show().siblings('img').remove(); }
+	                        converse.giveFeedback(__('连接失败'), 'error');
+	                    } else if (status === Strophe.Status.AUTHENTICATING) {
+	                        converse.giveFeedback(__('正在认证....'));
+	                    } else if (status === Strophe.Status.AUTHFAIL) {
+	                        if ($button) { $button.show().siblings('img').remove(); }
+	                        converse.giveFeedback(__('认证失败'), 'error');
+	                    } else if (status === Strophe.Status.DISCONNECTING) {
+	                        converse.giveFeedback(__('连接已断开'), 'error');
+	                    } else if (status === Strophe.Status.ATTACHED) {
+	                        //console.log(__('Attached'));
+	                    }
+	                }, this));
+				});
                 // this.$parent.find('#controlbox-tabs').append(this.tab_template());
                 // var template = this.template();
                 // if (! this.bosh_url_input) {

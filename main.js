@@ -4,10 +4,8 @@ require(["jquery", "converse"], function($, converse) {
     converse.initialize({
         auto_list_rooms: false,
         auto_subscribe: false,
-        //bosh_service_url: 'http://192.168.1.120/http-bind', // Please use this connection manager only for testing purposes
         bosh_service_url: 'http://localhost/http-bind', // Please use this connection manager only for testing purposes
         hide_muc_server: false,
-        i18n: locales.en, // Refer to ./locale/locales.js to see which locales are supported
         prebind: false,
         show_controlbox_by_default: true,
         xhr_user_search: false
